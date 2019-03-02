@@ -2,8 +2,8 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/test/CSE116-Scala-Examples" vcs="Git" />
-    <mapping directory="$PROJECT_DIR$/test/ScalaFX-Tutorials" vcs="Git" />
-    <mapping directory="C:\Users\roabu\IdeaProjects\Group_Lab\test\testes" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/test/CSE116-Scala-Examples" vcs="" />
+    <mapping directory="$PROJECT_DIR$/test/ScalaFX-Tutorials" vcs="" />
+    <mapping directory="C:\Users\roabu\IdeaProjects\Group_Lab\test\testes" vcs="" />
   </component>
 </project>
