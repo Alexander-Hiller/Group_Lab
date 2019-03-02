@@ -1,5 +1,6 @@
 package TankGame
 
+import scala.collection.mutable.ListBuffer
 import javafx.scene.input.{KeyCode, KeyEvent, MouseEvent}
 import scalafx.animation.AnimationTimer
 import scalafx.application.JFXApp
@@ -16,7 +17,7 @@ object GUI extends JFXApp{
 
   var tankName: Int = 0
 
-  var allTanks: Map[thing,Shape]=Map()
+  var allTanks = new ListBuffer[thing]()
   var sceneGraphics: Group = new Group {}
 
   def drawTank(centerX: Double, centerY: Double, name:String): Unit = {
@@ -29,14 +30,14 @@ object GUI extends JFXApp{
       translateY = centerY - tankHeight / 2.0
       fill = Color.OliveDrab
     }
-    val tempTank: thing = new Tank(name)
-    allTanks += (tempTank->newTank)
+    val tempTank: thing = new Tank(name,newTank)
+    allTanks += tempTank
     sceneGraphics.children.add(newTank)
   }
 
   def keyPressed(keyCode: KeyCode): Unit = {
     keyCode.getName match {
-      case "X" => println(allTanks.keys)
+      case "X" => println(allTanks(1))
       case "Z" => playerIdents()
       case _ => println(keyCode.getName + " pressed with no action")
     }
@@ -44,7 +45,7 @@ object GUI extends JFXApp{
 
   def playerIdents(): Unit = {
     for (ident <- allTanks) {
-      println(ident._1.health())
+      println(ident)
     }
   }
 
@@ -63,8 +64,8 @@ object GUI extends JFXApp{
       }
 
     val update: Long => Unit = (time: Long) => {
-      for (shape <- allTanks) {
-        shape._2.rotate.value+=0.5
+      for (tank <- allTanks) {
+        tank.shape.rotate.value+=0.5
       }
     }
     AnimationTimer(update).start()
