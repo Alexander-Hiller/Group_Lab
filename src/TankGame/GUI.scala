@@ -8,7 +8,7 @@ import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.control.{Button, TextField}
 import scalafx.scene._
 import scalafx.scene.paint.Color
-import scalafx.scene.shape.{Rectangle, Shape}
+import scalafx.scene.shape.{Circle, Rectangle, Shape}
 import scalafx.scene.layout._
 
 object GUI extends JFXApp{
@@ -16,12 +16,16 @@ object GUI extends JFXApp{
   val windowHeight: Double = 800
   val tankHeight: Double = 20
   val tankWidth: Double = 40
+  var bullRadius: Double = 5
   var flag: Int =0
   var tankName: Int = 0
   var player: String = ""
-  var playerSpeed: Int = 5
+  var playerSpeed: Double = 5
+  var bulSpeed: Double = 1.25
 
   var allTanks = new ListBuffer[thing]()
+  var allBull = new ListBuffer[thing]()
+  var allBarriers = new ListBuffer[thing]()
   var sceneGraphics: Group = new Group {}
 
   val playerName:TextField=new TextField {
@@ -58,6 +62,26 @@ object GUI extends JFXApp{
     }
   }
 
+  def drawBullet(xTar: Double, yTar: Double, name:String): Unit ={
+    val newBull: Circle = new Circle{
+      for (ident <- allTanks) {
+        if (ident.toString == player) {
+          centerX= ident.shape.translateX.value + tankWidth /2
+          centerY= ident.shape.translateY.value + tankHeight /2
+          radius = bullRadius
+          fill = Color.Black
+        }
+      }
+    }
+    val tempBull: thing = new Bullet(player, newBull)
+    tempBull.xPos=newBull.centerX.value + tankWidth /2
+    tempBull.yPos=newBull.centerY.value + tankHeight /2
+    tempBull.xTar = xTar
+    tempBull.yTar = yTar
+    tempBull.wild = tempBull.xPos
+    allBull+= tempBull
+    sceneGraphics.children.add(newBull)
+  }
 
   def drawTank(centerX: Double, centerY: Double, name:String): Unit = {
     val newTank = new Rectangle() {
@@ -70,8 +94,8 @@ object GUI extends JFXApp{
       fill = Color.OliveDrab
     }
     val tempTank: thing = new Tank(name,newTank)
-    tempTank.xPos=centerX
-    tempTank.yPos=centerY
+    tempTank.xPos=centerX - tankWidth / 2.0
+    tempTank.yPos=centerY - tankHeight / 2.0
     allTanks += tempTank
     sceneGraphics.children.add(newTank)
   }
@@ -79,26 +103,28 @@ object GUI extends JFXApp{
   def keyPressed(keyCode: KeyCode): Unit = {
     for (ident <- allTanks) {
       if (ident.toString==player) {
+        val angle: Double = ident.shape.rotate.value*math.Pi/180
         keyCode.getName match {
           case "X" => println (allTanks.toString () )
           case "Z" => playerLocs ()
-          case "Up" =>{
+          case ("Up" | "W") =>{
             //println(math.sin(ident.shape.rotate.value*math.Pi/180))
-            ident.shape.translateY.value+= playerSpeed*math.sin(ident.shape.rotate.value*math.Pi/180)
-            ident.shape.translateX.value+= playerSpeed*math.cos(ident.shape.rotate.value*math.Pi/180)
-            ident.xPos+=playerSpeed*math.cos(ident.shape.rotate.value*math.Pi/180)
-            ident.yPos+=playerSpeed*math.sin(ident.shape.rotate.value*math.Pi/180)
+            ident.shape.translateY.value+= playerSpeed*math.sin(angle)
+            ident.shape.translateX.value+= playerSpeed*math.cos(angle)
+            ident.xPos+=playerSpeed*math.cos(angle)
+            ident.yPos+=playerSpeed*math.sin(angle)
           }
-          case "Down" => {
-            ident.shape.translateY.value-= playerSpeed*math.sin(ident.shape.rotate.value*math.Pi/180)
-            ident.shape.translateX.value-= playerSpeed*math.cos(ident.shape.rotate.value*math.Pi/180)
-            ident.xPos-=playerSpeed*math.cos(ident.shape.rotate.value*math.Pi/180)
-            ident.yPos-=playerSpeed*math.sin(ident.shape.rotate.value*math.Pi/180)
+          case "Down"| "S" => {
+            ident.shape.translateY.value-= playerSpeed*math.sin(angle)
+            ident.shape.translateX.value-= playerSpeed*math.cos(angle)
+            ident.xPos-=playerSpeed*math.cos(angle)
+            ident.yPos-=playerSpeed*math.sin(angle)
           }
-          case "Left" => {
-            ident.shape.rotate.value -= 1
+          case "Left"| "A" => {
+            ident.shape.rotate.value -= 2
           }
-          case "Right" => ident.shape.rotate.value+= 1
+          case "Right"| "D" => ident.shape.rotate.value+= 2
+
           case _ => println (keyCode.getName + " pressed with no action")
       }
       }
@@ -115,6 +141,7 @@ object GUI extends JFXApp{
   this.stage = new PrimaryStage{
     this.title = "Crappy Tanks"
     scene = new Scene(windowWidth, windowHeight) {
+      fill = Color.LightGreen
       content = List(
         sceneGraphics,
           new VBox() {
@@ -126,7 +153,7 @@ object GUI extends JFXApp{
 
 
       //testing drop a tank onto the screen
-      addEventHandler(MouseEvent.MOUSE_CLICKED, (event: MouseEvent) => drawTank(event.getX, event.getY, tankName.toString))
+      addEventHandler(MouseEvent.MOUSE_CLICKED, (event: MouseEvent) => drawBullet(event.getX, event.getY, tankName.toString))
 
       }
 
@@ -138,8 +165,66 @@ object GUI extends JFXApp{
       for (tank <- allTanks) {
         //tank.shape.rotate.value+=0.5
       }
+
+      for (bull<- allBull){
+        moveBull(bull)
+        if (bull.health<=0){
+          explode(bull)
+        }
+
+        //delete the object when its done exploding
+        if (bull.deathAnimator>=120){
+          sceneGraphics.children.remove(bull.shape)
+          allBull -= bull
+        }
+      }
     }
     AnimationTimer(update).start()
+  }
+
+  def moveBull(bull: thing):Unit ={
+    //computing angle towards clicked target (if behind tank make it negative)
+    var angle: Double = math.atan((bull.yTar-bull.yPos)/(bull.xTar-bull.xPos))
+    //if ((bull.xTar - bull.xPos) < 1)
+
+    if (bull.health>0) {
+      if ((bull.xTar - bull.wild) < 0) {
+        bull.shape.translateX.value -= playerSpeed * bulSpeed * math.cos(angle)
+        bull.shape.translateY.value -= playerSpeed * bulSpeed * math.sin(angle)
+        bull.xPos -= playerSpeed * 2 * math.cos(angle)
+        bull.yPos -= playerSpeed * 2 * math.sin(angle)
+      }
+      else {
+        bull.shape.translateX.value += playerSpeed * bulSpeed * math.cos(angle)
+        bull.shape.translateY.value += playerSpeed * bulSpeed * math.sin(angle)
+        bull.xPos += playerSpeed * bulSpeed * math.cos(angle)
+        bull.yPos += playerSpeed * bulSpeed * math.sin(angle)
+      }
+      bull.health -= 1
+      //stop bullet if it reaches destination
+      if((math.abs(bull.xPos-bull.xTar)<playerSpeed)& math.abs(bull.yPos-bull.yTar)<playerSpeed) bull.health=0
+    }
+  }
+
+
+  def explode(obj: thing):Unit ={
+    if(obj.deathAnimator<15){
+      //dark red 139,0,0
+      obj.shape.scaleX.value+= .2
+      obj.shape.scaleY.value+= .1
+      obj.deathAnimator +=1
+      obj.shape.fill = Color.rgb((17*obj.deathAnimator).toInt,(8*obj.deathAnimator).toInt,0)
+    }
+    else if (obj.deathAnimator<30){
+      obj.shape.scaleX.value+= .1
+      obj.shape.scaleY.value+= .2
+      obj.deathAnimator +=1
+      obj.shape.fill = Color.rgb(255,(8*obj.deathAnimator).toInt,0)
+    }
+    else if (obj.deathAnimator<120){
+      obj.shape.opacity.value -= 0.012
+      obj.deathAnimator +=1
+    }
   }
 
 }
