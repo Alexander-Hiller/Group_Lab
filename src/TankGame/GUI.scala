@@ -38,7 +38,6 @@ object GUI extends JFXApp{
   val mediaPlayer = new MediaPlayer(music)
   mediaPlayer.play()
   mediaPlayer.autoPlay = true
-
   mediaPlayer.volume.value = 0.25
   println(mediaPlayer.volume.value)
 
@@ -230,7 +229,7 @@ object GUI extends JFXApp{
       obj.shape.fill = Color.rgb((17*obj.deathAnimator).toInt,(8*obj.deathAnimator).toInt,0)
     }
     else if (obj.deathAnimator<30){
-      obj.shape.scaleX.value+= .1
+      obj.shape().scaleX.value+= .1
       obj.shape.scaleY.value+= .2
       obj.deathAnimator +=1
       obj.shape.fill = Color.rgb(255,(8*obj.deathAnimator).toInt,0)
