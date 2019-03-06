@@ -10,6 +10,11 @@ import scalafx.scene._
 import scalafx.scene.paint.Color
 import scalafx.scene.shape.{Circle, Rectangle, Shape}
 import scalafx.scene.layout._
+import scalafx.scene.media.Media
+import scalafx.scene.media.MediaPlayer
+import java.io.File
+
+
 
 object GUI extends JFXApp{
   val windowWidth: Double = 800
@@ -22,11 +27,20 @@ object GUI extends JFXApp{
   var player: String = ""
   var playerSpeed: Double = 5
   var bulSpeed: Double = 1.25
+  val musicFile: String = "src\\TankGame\\Assets\\bxmMusicVideoGameMetal.mp3"
 
   var allTanks = new ListBuffer[thing]()
   var allBull = new ListBuffer[thing]()
   var allBarriers = new ListBuffer[thing]()
   var sceneGraphics: Group = new Group {}
+
+  val music = new Media(new File(musicFile).toURI.toString)
+  val mediaPlayer = new MediaPlayer(music)
+  mediaPlayer.play()
+  mediaPlayer.autoPlay = true
+
+  mediaPlayer.volume.value = 0.25
+  println(mediaPlayer.volume.value)
 
   val playerName:TextField=new TextField {
     style = "-fx-font: 18 ariel;"
