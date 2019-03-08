@@ -11,12 +11,13 @@ import scalafx.scene.paint.Color
 import scalafx.scene.shape.{Circle, Rectangle, Shape}
 import scalafx.scene.layout._
 import scalafx.scene.media.Media
-import scalafx.scene.media.MediaPlayer
+//import scalafx.scene.media.MediaPlayer
 import java.io.File
-
+import javafx.scene.media.MediaPlayer
 
 
 object GUI extends JFXApp{
+ //### Governing Definitions
   val windowWidth: Double = 800
   val windowHeight: Double = 800
   val tankHeight: Double = 20
@@ -24,28 +25,40 @@ object GUI extends JFXApp{
   var bullRadius: Double = 5
   var flag: Int =0
   var tankName: Int = 0
+  var barName: Int = 0
   var player: String = ""
   var playerSpeed: Double = 5
   var bulSpeed: Double = 1.25
-  val musicFile: String = "src\\TankGame\\Assets\\bxmMusicVideoGameMetal.mp3"
+  val musicFile: String = "src\\TankGame\\Assets\\NEFFEX - Fight Back (TheJabberturtle Gun Sync).mp3"
+  val fireFile: String = "src\\TankGame\\Assets\\slam-fire.mp3"
+  val maxBar: Int = 30
+  val minBar: Int = 5
 
+
+  //###### Object Groups and lists
   var allTanks = new ListBuffer[thing]()
   var allBull = new ListBuffer[thing]()
   var allBarriers = new ListBuffer[thing]()
   var sceneGraphics: Group = new Group {}
 
+  //Background Music
   val music = new Media(new File(musicFile).toURI.toString)
   val mediaPlayer = new MediaPlayer(music)
+  mediaPlayer.autoPlayProperty
+  mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE)
+  mediaPlayer.setVolume(0.25)
   mediaPlayer.play()
-  mediaPlayer.autoPlay = true
-  mediaPlayer.volume.value = 0.25
-  println(mediaPlayer.volume.value)
 
+  //soundFX
+  val fire = new Media(new File(fireFile).toURI.toString)
+  val firePlayer = new MediaPlayer(fire)
+
+
+  //######## Text box and Button
   val playerName:TextField=new TextField {
     style = "-fx-font: 18 ariel;"
     text = "Name"
   }
-
   val button: Button = new Button {
     minWidth = 100
     minHeight = 50
@@ -54,6 +67,7 @@ object GUI extends JFXApp{
     onAction = event => buttonPressed()
   }
 
+  //#### Login Button Logic
   def buttonPressed(): Unit = {
     val input: String = playerName.text.value
     if(input!="Name" & flag==0){
@@ -75,6 +89,16 @@ object GUI extends JFXApp{
     }
   }
 
+
+  //### Spawn n number of barriers
+  //CHANGE THIS WHEN WE CAN GET A LIST FROM AJSON STRING
+  for(i<- 0 to (math.random()*maxBar).toInt + minBar) {
+    val xPos: Double = math.random()*windowWidth
+    val yPos: Double= math.random()*windowHeight
+    drawBarrier(xPos,yPos,barName.toString)
+  }
+
+  //######## Bullet Spawner
   def drawBullet(xTar: Double, yTar: Double, name:String): Unit ={
     val newBull: Circle = new Circle{
       for (ident <- allTanks) {
@@ -94,8 +118,15 @@ object GUI extends JFXApp{
     tempBull.wild = tempBull.xPos
     allBull+= tempBull
     sceneGraphics.children.add(newBull)
+
+    //Play Fire sounds
+    firePlayer.seek(firePlayer.getStartTime)
+    firePlayer.play()
+
   }
 
+
+  //#### Tank Spawner
   def drawTank(centerX: Double, centerY: Double, name:String): Unit = {
     val newTank = new Rectangle() {
       //tankName is just for testing
@@ -113,6 +144,28 @@ object GUI extends JFXApp{
     sceneGraphics.children.add(newTank)
   }
 
+  //####### Barrier Spawner
+  def drawBarrier(centerX: Double, centerY: Double, name:String): Unit = {
+    barName+=1
+    val w: Double = math.random()*50 + 5
+    val l: Double = math.random()*50 + 5
+
+    val newBarrier = new Rectangle() {
+      width = w
+      height = l
+      translateX = centerX - w / 2.0
+      translateY = centerY - l / 2.0
+      fill = Color.rgb((math.random()*255).toInt, (math.random()*255).toInt,(math.random()*255).toInt)
+    }
+    val tempBar: thing = new Barrier(name,newBarrier)
+    tempBar.xPos=centerX - w / 2.0
+    tempBar.yPos=centerY - l / 2.0
+    allBarriers += tempBar
+    sceneGraphics.children.add(newBarrier)
+  }
+
+
+  //########Key Listener
   def keyPressed(keyCode: KeyCode): Unit = {
     for (ident <- allTanks) {
       if (ident.toString==player) {
@@ -121,22 +174,17 @@ object GUI extends JFXApp{
           case "X" => println (allTanks.toString () )
           case "Z" => playerLocs ()
           case ("Up" | "W") =>{
-            //println(math.sin(ident.shape.rotate.value*math.Pi/180))
-            ident.shape.translateY.value+= playerSpeed*math.sin(angle)
-            ident.shape.translateX.value+= playerSpeed*math.cos(angle)
-            ident.xPos+=playerSpeed*math.cos(angle)
-            ident.yPos+=playerSpeed*math.sin(angle)
+            moveFwd(ident,angle)
           }
           case "Down"| "S" => {
-            ident.shape.translateY.value-= playerSpeed*math.sin(angle)
-            ident.shape.translateX.value-= playerSpeed*math.cos(angle)
-            ident.xPos-=playerSpeed*math.cos(angle)
-            ident.yPos-=playerSpeed*math.sin(angle)
+            moveBack(ident,angle)
           }
           case "Left"| "A" => {
-            ident.shape.rotate.value -= 2
+            rotateLeft(ident)
           }
-          case "Right"| "D" => ident.shape.rotate.value+= 2
+          case "Right"| "D" => {
+            rotateRight(ident)
+          }
 
           case _ => println (keyCode.getName + " pressed with no action")
       }
@@ -144,13 +192,42 @@ object GUI extends JFXApp{
     }
   }
 
+
+
+  //########################## Movement of Tank Commands
+  def moveFwd(obj : thing, angle : Double): Unit={
+    obj.shape.translateY.value+= playerSpeed*math.sin(angle)
+    obj.shape.translateX.value+= playerSpeed*math.cos(angle)
+    obj.xPos+=playerSpeed*math.cos(angle)
+    obj.yPos+=playerSpeed*math.sin(angle)
+  }
+
+  def moveBack(obj : thing, angle : Double): Unit={
+    obj.shape.translateY.value-= playerSpeed*math.sin(angle)
+    obj.shape.translateX.value-= playerSpeed*math.cos(angle)
+    obj.xPos-=playerSpeed*math.cos(angle)
+    obj.yPos-=playerSpeed*math.sin(angle)
+  }
+
+  def rotateLeft(obj: thing): Unit ={
+    obj.shape.rotate.value -= 2
+  }
+
+  def rotateRight(obj: thing): Unit ={
+    obj.shape.rotate.value += 2
+  }
+
+
+  //######Print out all player locations
   def playerLocs(): Unit = {
     for (ident <- allTanks) {
-      println(ident.toString()+ " is at:\n X pos: "+ ident.xPos+ "   Y pos: " + ident.yPos+"\n")
+      println(ident.toString()+ " is at:\n Health: " + ident.health + "   X pos: "+ ident.xPos+ "   Y pos: " + ident.yPos+"\n")
     }
   }
 
 
+
+  //###########Stage and Update
   this.stage = new PrimaryStage{
     this.title = "Crappy Tanks"
     scene = new Scene(windowWidth, windowHeight) {
@@ -171,14 +248,18 @@ object GUI extends JFXApp{
       }
 
     val update: Long => Unit = (time: Long) => {
+
+      //fade the button out of view after player has entered game
       if(flag!=0){
         button.opacity.value-=0.01
       }
 
+      //For updating positions of all tanks except the player
       for (tank <- allTanks) {
         //tank.shape.rotate.value+=0.5
       }
 
+      //For updating all the positions of the bullets
       for (bull<- allBull){
         moveBull(bull)
         if (bull.health<=0){
@@ -195,6 +276,9 @@ object GUI extends JFXApp{
     AnimationTimer(update).start()
   }
 
+
+
+  //######## logic behind bullet movement
   def moveBull(bull: thing):Unit ={
     //computing angle towards clicked target (if behind tank make it negative)
     var angle: Double = math.atan((bull.yTar-bull.yPos)/(bull.xTar-bull.xPos))
@@ -219,7 +303,7 @@ object GUI extends JFXApp{
     }
   }
 
-
+//############## How to make an object explode
   def explode(obj: thing):Unit ={
     if(obj.deathAnimator<15){
       //dark red 139,0,0
