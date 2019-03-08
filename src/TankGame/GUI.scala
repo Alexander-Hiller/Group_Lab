@@ -26,7 +26,7 @@ object GUI extends JFXApp{
   var bullRadius: Double = 5
   var flag: Int =0
   var tankName: Int = 0
-  var barName: Int = 0
+  //var barName: Int = 0
   var player: String = ""
   var playerSpeed: Double = 5
   var bulSpeed: Double = 1.25
@@ -94,10 +94,10 @@ object GUI extends JFXApp{
 
   //### Spawn n number of barriers
   //CHANGE THIS WHEN WE CAN GET A LIST FROM AJSON STRING
-  for(i<- 0 to (math.random()*maxBar).toInt + minBar) {
+  for(i<-0 to (math.random()*maxBar).toInt + minBar) {
     val xPos: Double = math.random()*windowWidth
     val yPos: Double= math.random()*windowHeight
-    drawBarrier(xPos,yPos,barName.toString)
+    drawBarrier(xPos,yPos,i.toString)
   }
 
   //######## Bullet Spawner
@@ -154,7 +154,6 @@ object GUI extends JFXApp{
 
   //####### Barrier Spawner
   def drawBarrier(centerX: Double, centerY: Double, name:String): Unit = {
-    barName+=1
     val w: Double = math.random()*50 + 20
     val l: Double = math.random()*50 + 20
 
@@ -297,7 +296,7 @@ object GUI extends JFXApp{
   //######## logic behind bullet movement
   def moveBull(bull: thing):Unit ={
     //computing angle towards clicked target
-    var angle: Double = math.atan((bull.yTar-bull.yPos)/(bull.xTar-bull.xPos))
+    val angle: Double = math.atan((bull.yTar-bull.yPos)/(bull.xTar-bull.xPos))
 
 
     //if angle is behind the tank
@@ -327,8 +326,8 @@ object GUI extends JFXApp{
       val width: Double = barrier.xTar/2
       val height: Double = barrier.yTar/2
 
-      if (((bull.xPos)< (barrier.xPos+width))&((bull.xPos) > (barrier.xPos-width))){
-        if (((bull.yPos) < (barrier.yPos + height))&((bull.yPos) > (barrier.yPos - height))){
+      if ((bull.xPos< (barrier.xPos+width))&(bull.xPos > (barrier.xPos-width))){
+        if ((bull.yPos < (barrier.yPos + height))&(bull.yPos > (barrier.yPos - height))){
           bull.health=0
           barrier.health-=bulDmg
           println("Barrier: " + barrier.toString + " is at "+ barrier.health + " health")
