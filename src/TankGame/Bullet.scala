@@ -1,9 +1,9 @@
 package TankGame
 import scalafx.scene.shape.Shape
 
-class Bullet(val name: String, val shape: Shape) extends thing(name, shape)  {
+class Bullet(val name: String, val inShape: Shape) extends thing(name, inShape)  {
   //Health indicates range... Health decreases with distance
-  var health: Int = 40
+  var health: Int = 400
   //println(this.name +" Has Fired!")
   var xPos: Double = 0
   //wild card stores original x data
@@ -13,6 +13,7 @@ class Bullet(val name: String, val shape: Shape) extends thing(name, shape)  {
 
   var xTar: Double =0
   var yTar: Double =0
+  var shape:Shape = inShape
 
 
   override def toString: String ={
