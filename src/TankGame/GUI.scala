@@ -296,18 +296,17 @@ object GUI extends JFXApp{
 
   //######## logic behind bullet movement
   def moveBull(bull: thing):Unit ={
-    //computing angle towards clicked target (if behind tank make it negative)
+    //computing angle towards clicked target
     var angle: Double = math.atan((bull.yTar-bull.yPos)/(bull.xTar-bull.xPos))
 
 
-
+    //if angle is behind the tank
     if ((bull.xTar - bull.wild) < 0) {
-      angle = angle * -1
+      //angle = angle * -1
       bull.shape.translateX.value -= playerSpeed * bulSpeed * math.cos(angle)
-      bull.shape.translateY.value += playerSpeed * bulSpeed * math.sin(angle)
-      bull.xPos -= playerSpeed * 2 * math.cos(angle)
-      bull.yPos += playerSpeed * 2 * math.sin(angle)
-
+      bull.shape.translateY.value -= playerSpeed * bulSpeed * math.sin(angle)
+      bull.xPos -= playerSpeed * bulSpeed * math.cos(angle)
+      bull.yPos -= playerSpeed * bulSpeed * math.sin(angle)
     }
     else {
       bull.shape.translateX.value += playerSpeed * bulSpeed * math.cos(angle)
@@ -347,7 +346,7 @@ object GUI extends JFXApp{
     }
   }
 
-//############## How to make an object explode
+//############## animation of an object exploding
   def explode(obj: thing):Unit ={
     if(obj.deathAnimator<15){
       //dark red 139,0,0
