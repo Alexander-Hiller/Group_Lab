@@ -152,6 +152,7 @@ object GUI extends JFXApp{
     sceneGraphics.children.add(newTank)
   }
 
+
   //####### Barrier Spawner
   def drawBarrier(centerX: Double, centerY: Double, name:String): Unit = {
     val w: Double = math.random()*50 + 20
@@ -194,17 +195,40 @@ object GUI extends JFXApp{
   }
 
 
-
   //########################## Movement of Tank Commands
   def moveFwd(obj : thing, angle : Double): Unit={
     obj.shape.translateY.value+= playerSpeed*math.sin(angle)
     obj.shape.translateX.value+= playerSpeed*math.cos(angle)
+    if(obj.shape.translateX.value >= 760){
+      obj.shape.translateX.value = 760
+    }
+    if(obj.shape.translateY.value >= 770){
+      obj.shape.translateY.value = 770
+    }
+    if(obj.shape.translateX.value <= 0){
+      obj.shape.translateX.value = 0
+    }
+    if(obj.shape.translateY.value <= 10){
+      obj.shape.translateY.value = 10
+    }
     obj.xPos+=playerSpeed*math.cos(angle)
     obj.yPos+=playerSpeed*math.sin(angle)
   }
   def moveBack(obj : thing, angle : Double): Unit={
     obj.shape.translateY.value-= playerSpeed*math.sin(angle)
     obj.shape.translateX.value-= playerSpeed*math.cos(angle)
+    if(obj.shape.translateX.value >= 760){
+      obj.shape.translateX.value = 760
+    }
+    if(obj.shape.translateY.value >= 770){
+      obj.shape.translateY.value = 770
+    }
+    if(obj.shape.translateX.value <= 0){
+      obj.shape.translateX.value = 0
+    }
+    if(obj.shape.translateY.value <= 10){
+      obj.shape.translateY.value = 10
+    }
     obj.xPos-=playerSpeed*math.cos(angle)
     obj.yPos-=playerSpeed*math.sin(angle)
   }
