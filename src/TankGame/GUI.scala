@@ -199,38 +199,46 @@ object GUI extends JFXApp{
   def moveFwd(obj : thing, angle : Double): Unit={
     obj.shape.translateY.value+= playerSpeed*math.sin(angle)
     obj.shape.translateX.value+= playerSpeed*math.cos(angle)
+    obj.xPos+=playerSpeed*math.cos(angle)
+    obj.yPos+=playerSpeed*math.sin(angle)
     if(obj.shape.translateX.value >= 760){
       obj.shape.translateX.value = 760
+      obj.xPos = 780
     }
     if(obj.shape.translateY.value >= 770){
       obj.shape.translateY.value = 770
+      obj.yPos = 780
     }
     if(obj.shape.translateX.value <= 0){
       obj.shape.translateX.value = 0
+      obj.xPos = 20
     }
     if(obj.shape.translateY.value <= 10){
       obj.shape.translateY.value = 10
+      obj.yPos = 20
     }
-    obj.xPos+=playerSpeed*math.cos(angle)
-    obj.yPos+=playerSpeed*math.sin(angle)
   }
   def moveBack(obj : thing, angle : Double): Unit={
     obj.shape.translateY.value-= playerSpeed*math.sin(angle)
     obj.shape.translateX.value-= playerSpeed*math.cos(angle)
+    obj.xPos-=playerSpeed*math.cos(angle)
+    obj.yPos-=playerSpeed*math.sin(angle)
     if(obj.shape.translateX.value >= 760){
       obj.shape.translateX.value = 760
+      obj.xPos = 780
     }
     if(obj.shape.translateY.value >= 770){
       obj.shape.translateY.value = 770
+      obj.yPos = 780
     }
     if(obj.shape.translateX.value <= 0){
       obj.shape.translateX.value = 0
+      obj.xPos = 20
     }
     if(obj.shape.translateY.value <= 10){
       obj.shape.translateY.value = 10
+      obj.yPos = 20
     }
-    obj.xPos-=playerSpeed*math.cos(angle)
-    obj.yPos-=playerSpeed*math.sin(angle)
   }
   def rotateLeft(obj: thing): Unit ={
     obj.shape.rotate.value -= 2
