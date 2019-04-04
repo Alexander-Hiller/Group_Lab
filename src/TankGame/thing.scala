@@ -13,5 +13,6 @@ abstract class thing(name: String, inShape: Shape) {
 
   //wild variable to store extra data based on needs
   var wild: Double
+  var wild2: Double
 
 }

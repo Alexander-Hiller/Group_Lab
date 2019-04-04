@@ -12,6 +12,7 @@ class Barrier(val name: String, val inShape: Shape) extends thing(name, inShape)
   //store height here
   var yTar: Double =0
   var wild: Double = 0
+  var wild2: Double = 0
   var shape:Shape = inShape
   override def toString: String ={
     this.name

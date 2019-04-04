@@ -11,6 +11,7 @@ class Tank(val name: String, val inShape: Shape) extends thing(name, inShape) {
   var xTar: Double =0
   var yTar: Double =0
   var wild: Double = 0
+  var wild2: Double = 0
   var shape:Shape = inShape
 
   override def toString: String ={

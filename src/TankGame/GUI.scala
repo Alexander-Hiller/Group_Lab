@@ -1,5 +1,8 @@
 package TankGame
 
+import java.io.FileNotFoundException
+import java.nio.file.{Files, Paths}
+
 import scala.collection.mutable.ListBuffer
 import javafx.scene.input.{KeyCode, KeyEvent, MouseEvent}
 import scalafx.animation.AnimationTimer
@@ -11,9 +14,12 @@ import scalafx.scene.paint.Color
 import scalafx.scene.shape.{Circle, Rectangle}
 import scalafx.scene.layout._
 import scalafx.scene.media.Media
+
+import scala.io.Source
 //import scalafx.scene.media.MediaPlayer
 import java.io.File
 import javafx.scene.media.MediaPlayer
+import play.api.libs.json._
 
 
 object GUI extends JFXApp{
@@ -35,6 +41,7 @@ object GUI extends JFXApp{
   val fireFile: String = "src\\TankGame\\Assets\\slam-fire.mp3"
   val maxBar: Int = 30
   val minBar: Int = 5
+  val JSONfile: String ="jsonFile.json"
 
 
   //###### Object Groups and lists
@@ -56,7 +63,7 @@ object GUI extends JFXApp{
   val firePlayer = new MediaPlayer(fire)
 
 
-  //######## Text box and Button
+  //######## Text box and Buttons
   val playerName:TextField=new TextField {
     style = "-fx-font: 18 ariel;"
     text = "Name"
@@ -68,7 +75,13 @@ object GUI extends JFXApp{
     text = "Start Your Game"
     onAction = event => buttonPressed()
   }
-
+  val generate: Button = new Button {
+    minWidth = 100
+    minHeight = 50
+    style = "-fx-font: 16 ariel;"
+    text = "Generate New Map"
+    onAction = event => genButtonPressed()
+  }
   //#### Login Button Logic
   def buttonPressed(): Unit = {
     val input: String = playerName.text.value
@@ -82,6 +95,7 @@ object GUI extends JFXApp{
       playerName.editable=false
       playerName.disable = true
       button.disable = true
+      generate.disable = true
     }
     else if (flag!=0){
       button.text = "You're already in Game"
@@ -91,17 +105,224 @@ object GUI extends JFXApp{
     }
   }
 
+//generation button logic
+  def genButtonPressed(): Unit = {
+    //Delete Any Existing Barriers
+    for (barrier<- allBarriers){
+        sceneGraphics.children.remove(barrier.shape)
+        allBarriers -= barrier
+      }
+    //Delete Any Existing Tanks
+    for (tank<- allTanks){
+      sceneGraphics.children.remove(tank.shape)
+      allTanks-= tank
+    }
 
-  //### Spawn n number of barriers
-  //CHANGE THIS WHEN WE CAN GET A LIST FROM AJSON STRING
-  for(i<-0 to (math.random()*maxBar).toInt + minBar) {
-    val xPos: Double = math.random()*windowWidth
-    val yPos: Double= math.random()*windowHeight
-    drawBarrier(xPos,yPos,i.toString)
+    //### Spawn n number of barriers
+    for(i<-0 to (math.random()*maxBar).toInt + minBar) {
+      val xPos: Double = math.random()*windowWidth
+      val yPos: Double= math.random()*windowHeight
+      val w: Double = math.random()*50 + 20
+      val l: Double = math.random()*50 + 20
+      drawBarrier(xPos,yPos,i.toString,w,l)
+    }
+
+    // Make new JSON file
+    Files.write(Paths.get(JSONfile), toJSON().getBytes())
+  }
+
+
+  //##### How to format the JSON String
+  def toJSON(): String={
+    var tankMap: Map[String,JsValue]=Map()
+    var barMap: Map[String,JsValue]=Map()
+    var bullMap: Map[String,JsValue]=Map()
+    //map all tanks
+    for(tank<-allTanks){
+      var tempMap: Map[String,JsValue]=
+                    Map("name"->Json.toJson(tank.toString),
+                    "xPos"-> Json.toJson(tank.xPos),
+                    "yPos"-> Json.toJson(tank.yPos),
+                    "xTar"-> Json.toJson(tank.xTar),
+                    "yTar"-> Json.toJson(tank.yTar),
+                    "death"-> Json.toJson(tank.deathAnimator),
+                    "wild"-> Json.toJson(tank.wild),
+                    "health"-> Json.toJson(tank.health)
+        )
+        var newTank=Json.toJson(tempMap)
+        tankMap= tankMap ++ Map(tank.toString->newTank)
+    }
+    //map all barriera
+    for(bar<-allBarriers){
+      var tempMap: Map[String,JsValue]=
+      Map("name"->Json.toJson(bar.toString),
+        "xPos"-> Json.toJson(bar.xPos),
+        "yPos"-> Json.toJson(bar.yPos),
+        "xTar"-> Json.toJson(bar.xTar),
+        "yTar"-> Json.toJson(bar.yTar),
+        "death"-> Json.toJson(bar.deathAnimator),
+        "wild"-> Json.toJson(bar.wild),
+        "health"-> Json.toJson(bar.health)
+      )
+      //println(bar.toString)
+      var newBar=Json.toJson(tempMap)
+      barMap=barMap ++ Map(bar.toString->newBar)
+    }
+
+    //map all bullets
+    for(bull<-allBull){
+      val tempMap: Map[String,JsValue]=
+      Map("name"->Json.toJson(bull.toString),
+        "xPos"-> Json.toJson(bull.xPos),
+        "yPos"-> Json.toJson(bull.yPos),
+        "xTar"-> Json.toJson(bull.xTar),
+        "yTar"-> Json.toJson(bull.yTar),
+        "death"-> Json.toJson(bull.deathAnimator),
+        "wild"-> Json.toJson(bull.wild),
+        "wild2"-> Json.toJson(bull.wild2),
+        "health"-> Json.toJson(bull.health)
+      )
+      var newBull=Json.toJson(tempMap)
+      bullMap=bullMap++ Map(bull.toString->newBull)
+    }
+
+    //convert all to JSON
+    val tanks: JsValue = Json.toJson(tankMap)
+    val bars: JsValue = Json.toJson(barMap)
+    val bulls: JsValue = Json.toJson(bullMap)
+
+    val thingMap: Map[String, JsValue]=Map(
+      "tanks"->tanks,
+      "bars"->bars,
+      "bulls"->bulls
+    )
+
+    Json.stringify(Json.toJson(thingMap))
+
+  }
+
+  //######### Create Objects from a JSON string
+  def fromJSON(jsonGameState: String): Unit = {
+  // make lists of objects by type
+    var JSONbarriers = new ListBuffer[JsValue]()
+    val parsed: JsValue = Json.parse(jsonGameState)
+
+    //Barrier Update and Management
+    val elements = (parsed \ "bars").as [Map[String,JsValue]]
+    var barList:List[String] = List()
+    for(bar<-allBarriers){
+      barList::=bar.toString
+    }
+    for(elem<-elements.keys){
+      val name: String = (elements(elem)\"name").as[String]
+      val xPos: Double = (elements(elem)\"xPos").as[Double]
+      val yPos: Double = (elements(elem)\"yPos").as[Double]
+      val w:Double=(elements(elem)\"xTar").as[Double]
+      val l:Double=(elements(elem)\"yTar").as[Double]
+      val health: Int=(elements(elem)\"health").as[Int]
+      val wild:Double=(elements(elem)\"wild").as[Double]
+      val death:Double=(elements(elem)\"death").as[Double]
+      //If item already exists update it
+      if(barList.contains(name)){
+        for(thing<-allBarriers){
+          if(name==thing.toString){
+            thing.health=health
+            thing.xPos=xPos
+            thing.yPos=yPos
+            thing.health=health
+            thing.wild=wild
+            thing.deathAnimator=death
+          }
+        }
+      }
+      // else add it to the game
+      else drawBarrier(xPos,yPos,name,w,l)
+    }
+
+
+    //Tank Update and Management
+    val tElements = (parsed \ "tanks").as [Map[String,JsValue]]
+    var tankList:List[String] = List()
+    for(tank<-allTanks){
+      tankList::=tank.toString
+    }
+    for(elem<-tElements.keys){
+      val name: String = (tElements(elem)\"name").as[String]
+      val xPos: Double = (tElements(elem)\"xPos").as[Double]
+      val yPos: Double = (tElements(elem)\"yPos").as[Double]
+      val xTar:Double=(tElements(elem)\"xTar").as[Double]
+      val yTar:Double=(tElements(elem)\"yTar").as[Double]
+      val health: Int=(tElements(elem)\"health").as[Int]
+      val wild:Double=(tElements(elem)\"wild").as[Double]
+      val death:Double=(tElements(elem)\"death").as[Double]
+      //If item already exists update it
+      if(tankList.contains(name)){
+        for(thing<-allTanks){
+          if(name==thing.toString){
+            thing.health=health
+            thing.xPos=xPos
+            thing.yPos=yPos
+            thing.xTar=xTar
+            thing.yTar=yTar
+            thing.health=health
+            thing.wild=wild
+            thing.deathAnimator=death
+          }
+        }
+      }
+      // else add it to the game
+      else drawTank(xPos,yPos,name)
+    }
+
+    //Bullet Update and Management
+    val bElements = (parsed \ "tanks").as [Map[String,JsValue]]
+    var bullList:List[String] = List()
+    for(bull<-allBull){
+      bullList::=bull.toString
+    }
+    for(elem<-bElements.keys){
+      val name: String = (bElements(elem)\"name").as[String]
+      val xPos: Double = (bElements(elem)\"xPos").as[Double]
+      val yPos: Double = (bElements(elem)\"yPos").as[Double]
+      val xTar:Double=(bElements(elem)\"xTar").as[Double]
+      val yTar:Double=(bElements(elem)\"yTar").as[Double]
+      val health: Int=(bElements(elem)\"health").as[Int]
+      val wild:Double=(bElements(elem)\"wild").as[Double]
+      val wild2:Double=(bElements(elem)\"wild2").as[Double]
+      val death:Double=(bElements(elem)\"death").as[Double]
+      //If item already exists update it
+      if(bullList.contains(name)){
+        for(thing<-allBull){
+          if(name==thing.toString){
+            if(wild2==thing.wild2) {
+              thing.health = health
+              thing.xPos = xPos
+              thing.yPos = yPos
+              thing.xTar = xTar
+              thing.yTar = yTar
+              thing.health = health
+              thing.wild = wild
+              thing.deathAnimator = death
+            }
+          }
+        }
+      }
+      // else add it to the game
+      else drawBullet(xTar,yTar,name, wild2)
+    }
+
+  }
+
+  def loadData(): Unit={
+    try {
+      fromJSON(Source.fromFile(JSONfile).mkString)
+    }catch{
+      case ex: FileNotFoundException => ex.printStackTrace()
+    }
   }
 
   //######## Bullet Spawner
-  def drawBullet(xTar: Double, yTar: Double, name:String): Unit ={
+  def drawBullet(xTar: Double, yTar: Double, name:String,bullNum:Double): Unit ={
     var startX: Double = 0
     var startY: Double = 0
 
@@ -123,6 +344,7 @@ object GUI extends JFXApp{
     tempBull.xTar = xTar
     tempBull.yTar = yTar
     tempBull.wild = tempBull.xPos
+    tempBull.wild2 = bullNum
     allBull+= tempBull
     sceneGraphics.children.add(newBull)
 
@@ -154,13 +376,10 @@ object GUI extends JFXApp{
 
 
   //####### Barrier Spawner
-  def drawBarrier(centerX: Double, centerY: Double, name:String): Unit = {
-    val w: Double = math.random()*50 + 20
-    val l: Double = math.random()*50 + 20
-
+  def drawBarrier(centerX: Double, centerY: Double, name:String, w: Double, l:Double): Unit = {
     val newBarrier = new Rectangle() {
-      width = w
-      height = l
+      width=w
+      height=l
       translateX = centerX - w / 2.0
       translateY = centerY - l / 2.0
       fill = Color.rgb((math.random()*255).toInt, (math.random()*255).toInt,(math.random()*255).toInt)
@@ -183,6 +402,7 @@ object GUI extends JFXApp{
         val angle: Double = ident.shape.rotate.value*math.Pi/180
         keyCode.getName match {
           case "X" => println (allTanks.toString () )
+          case "C" => loadData()
           case "Z" => playerLocs ()
           case "Up" | "W" =>moveFwd(ident,angle)
           case "Down"| "S" => moveBack(ident,angle)
@@ -265,7 +485,7 @@ object GUI extends JFXApp{
       content = List(
         sceneGraphics,
           new VBox() {
-          children = List(playerName, button)
+          children = List(playerName, button, generate)
           }
       )
 
@@ -274,8 +494,9 @@ object GUI extends JFXApp{
 
       //Fire a bullet based on where clicked
       addEventHandler(MouseEvent.MOUSE_CLICKED, (event: MouseEvent) => {
-        //println("X: "+ event.getX + " Y:" + event.getY)
-        drawBullet(event.getX, event.getY, tankName.toString)
+        //println("X: "+ event.getX + " Y:" +
+        val bullNum:Double=Math.random()*1000
+        drawBullet(event.getX, event.getY, tankName.toString, bullNum)
       })
 
       }
@@ -285,6 +506,7 @@ object GUI extends JFXApp{
       //fade the button out of view after player has entered game
       if(flag!=0){
         button.opacity.value-=0.01
+        generate.opacity.value-=0.01
       }
 
       //For updating positions of all tanks except the player
@@ -318,7 +540,8 @@ object GUI extends JFXApp{
           allBarriers -= bar
         }
       }
-
+    ///**** Save the game to JSON
+     // Files.write(Paths.get(JSONfile), toJSON().getBytes())
     }
     AnimationTimer(update).start()
   }

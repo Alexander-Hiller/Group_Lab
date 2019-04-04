@@ -10,7 +10,7 @@ class Bullet(val name: String, val inShape: Shape) extends thing(name, inShape) 
   var deathAnimator: Double = 0
   var wild: Double = xPos
   var yPos: Double = 0
-
+  var wild2: Double = 0
   var xTar: Double =0
   var yTar: Double =0
   var shape:Shape = inShape
