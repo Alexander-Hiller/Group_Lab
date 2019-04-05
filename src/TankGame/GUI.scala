@@ -519,9 +519,16 @@ object GUI extends JFXApp{
         generate.opacity.value-=0.01
       }
 
-      //For updating positions of all tanks except the player
+      //For updating status of all tanks
       for (tank <- allTanks) {
-        //tank.shape.rotate.value+=0.5
+        if (tank.health<=0){
+          explode(tank)
+        }
+        //delete the object when its done exploding
+        if (tank.deathAnimator>=120){
+          sceneGraphics.children.remove(tank.shape)
+          allTanks -= tank
+        }
       }
 
       //For updating all the positions of the bullets
@@ -596,17 +603,21 @@ object GUI extends JFXApp{
           bull.health=0
           barrier.health-=bulDmg
           println("Barrier: " + barrier.toString + " is at "+ barrier.health + " health")
-          //println("Hit barrier " + barrier.toString)
-          //println("bullet at X:" + bull.xPos + "   Y:"+bull.yPos)
-          //println("Barrier Left edge at " + (barrier.xPos - width))
-          //println("Barrier Right edge at " + (barrier.xPos + width))
-          //sceneGraphics.children.remove(barrier.shape)
-          //allBarriers -= barrier
         }
       }
     }
     for (tank <- allTanks) {
-      //tank.shape.rotate.value+=0.5
+      val width: Double = tankWidth/2
+      val height: Double = tankWidth/2
+      if(tank.toString!=playerName.text.value){
+        if ((bull.xPos< (tank.xPos+width))&(bull.xPos > (tank.xPos-width))){
+          if ((bull.yPos < (tank.yPos + height))&(bull.yPos > (tank.yPos - height))) {
+            bull.health = 0
+            tank.health -= bulDmg
+            println("Player: " + tank.toString + " is at " + tank.health + " health")
+          }
+        }
+      }
     }
   }
 
