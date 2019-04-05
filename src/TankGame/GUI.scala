@@ -41,7 +41,7 @@ object GUI extends JFXApp{
   val fireFile: String = "src\\TankGame\\Assets\\slam-fire.mp3"
   val maxBar: Int = 30
   val minBar: Int = 5
-  val JSONfile: String ="jsonFile.json"
+  val JSONfile: String ="operatingFile.json"
 
 
   //###### Object Groups and lists
@@ -204,7 +204,6 @@ object GUI extends JFXApp{
   //######### Create Objects from a JSON string
   def fromJSON(jsonGameState: String): Unit = {
   // make lists of objects by type
-    var JSONbarriers = new ListBuffer[JsValue]()
     val parsed: JsValue = Json.parse(jsonGameState)
 
     //Barrier Update and Management
@@ -259,6 +258,8 @@ object GUI extends JFXApp{
       if(tankList.contains(name)){
         for(thing<-allTanks){
           if(name==thing.toString){
+            thing.shape.translateX.value=xPos-tankWidth/2
+            thing.shape.translateY.value=yPos-tankHeight/2
             thing.health=health
             thing.xPos=xPos
             thing.yPos=yPos
@@ -275,12 +276,13 @@ object GUI extends JFXApp{
     }
 
     //Bullet Update and Management
-    val bElements = (parsed \ "tanks").as [Map[String,JsValue]]
+    val bElements = (parsed \ "bulls").as [Map[String,JsValue]]
     var bullList:List[String] = List()
     for(bull<-allBull){
       bullList::=bull.toString
     }
     for(elem<-bElements.keys){
+
       val name: String = (bElements(elem)\"name").as[String]
       val xPos: Double = (bElements(elem)\"xPos").as[Double]
       val yPos: Double = (bElements(elem)\"yPos").as[Double]
@@ -288,7 +290,7 @@ object GUI extends JFXApp{
       val yTar:Double=(bElements(elem)\"yTar").as[Double]
       val health: Int=(bElements(elem)\"health").as[Int]
       val wild:Double=(bElements(elem)\"wild").as[Double]
-      val wild2:Double=(bElements(elem)\"wild2").as[Double]
+      var wild2:Double =(bElements(elem)\"wild2").as[Double]
       val death:Double=(bElements(elem)\"death").as[Double]
       //If item already exists update it
       if(bullList.contains(name)){
@@ -352,7 +354,8 @@ object GUI extends JFXApp{
     firePlayer.seek(firePlayer.getStartTime)
     firePlayer.play()
     firePlayer.setVolume(0.25)
-
+    //Save to JSON
+    Files.write(Paths.get(JSONfile), toJSON().getBytes())
   }
 
 
@@ -437,6 +440,8 @@ object GUI extends JFXApp{
       obj.shape.translateY.value = 10
       obj.yPos = 20
     }
+    ///**** Save the game to JSON
+    Files.write(Paths.get(JSONfile), toJSON().getBytes())
   }
   def moveBack(obj : thing, angle : Double): Unit={
     obj.shape.translateY.value-= playerSpeed*math.sin(angle)
@@ -459,6 +464,8 @@ object GUI extends JFXApp{
       obj.shape.translateY.value = 10
       obj.yPos = 20
     }
+    ///**** Save the game to JSON
+    Files.write(Paths.get(JSONfile), toJSON().getBytes())
   }
   def rotateLeft(obj: thing): Unit ={
     obj.shape.rotate.value -= 2
@@ -500,8 +507,11 @@ object GUI extends JFXApp{
       })
 
       }
-    // Do this on every update
+    //########## Do this on every update
     val update: Long => Unit = (time: Long) => {
+      //First load data
+      loadData()
+
 
       //fade the button out of view after player has entered game
       if(flag!=0){
@@ -541,7 +551,7 @@ object GUI extends JFXApp{
         }
       }
     ///**** Save the game to JSON
-     // Files.write(Paths.get(JSONfile), toJSON().getBytes())
+      Files.write(Paths.get(JSONfile), toJSON().getBytes())
     }
     AnimationTimer(update).start()
   }
