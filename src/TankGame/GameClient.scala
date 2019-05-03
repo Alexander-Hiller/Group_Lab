@@ -3,6 +3,9 @@ package TankGame
 import java.io.FileNotFoundException
 import java.nio.file.{Files, Paths}
 
+import io.socket.client.{IO, Socket}
+import io.socket.emitter.Emitter
+
 import scala.collection.mutable.ListBuffer
 import javafx.scene.input.{KeyCode, KeyEvent, MouseEvent}
 import scalafx.animation.AnimationTimer
@@ -21,10 +24,26 @@ import java.io.File
 import javafx.scene.media.MediaPlayer
 import play.api.libs.json._
 
+import java.net.InetSocketAddress
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+//import akka.io.{IO, Tcp}
+import akka.util.ByteString
 
-object GUI extends JFXApp{
- //### Governing Definitions
+class HandleMessagesFromPython() extends Emitter.Listener {
+  override def call(objects: Object*): Unit = {
+    val stateData = objects.apply(0).toString
+    GameClient.gameState =stateData
+  }
+}
 
+
+object GameClient extends JFXApp{
+  var gameState: String = ""
+  var socket: Socket = IO.socket("http://localhost:60000/")
+  socket.on("message", new HandleMessagesFromPython)
+  socket.connect()
+
+  //### Governing Definitions
   val windowWidth: Double = 800
   val windowHeight: Double = 800
   val tankHeight: Double = 20
@@ -128,7 +147,8 @@ object GUI extends JFXApp{
     }
 
     // Make new JSON file
-    Files.write(Paths.get(JSONfile), toJSON().getBytes())
+    saveData()
+    //Files.write(Paths.get(JSONfile), toJSON().getBytes())
   }
 
 
@@ -316,11 +336,24 @@ object GUI extends JFXApp{
   }
 
   def loadData(): Unit={
+
+    if(gameState.length > 30){
+      fromJSON(gameState)
+    }
+    /*
     try {
       fromJSON(Source.fromFile(JSONfile).mkString)
     }catch{
       case ex: FileNotFoundException => ex.printStackTrace()
     }
+    */
+
+  }
+
+  def saveData(): Unit={
+    socket.emit("update",toJSON())
+    loadData()
+    //println(toJSON())
   }
 
   //######## Bullet Spawner
@@ -355,7 +388,8 @@ object GUI extends JFXApp{
     firePlayer.play()
     firePlayer.setVolume(0.25)
     //Save to JSON
-    Files.write(Paths.get(JSONfile), toJSON().getBytes())
+    //Files.write(Paths.get(JSONfile), toJSON().getBytes())
+    saveData()
   }
 
 
@@ -441,7 +475,8 @@ object GUI extends JFXApp{
       obj.yPos = 20
     }
     ///**** Save the game to JSON
-    Files.write(Paths.get(JSONfile), toJSON().getBytes())
+    saveData()
+    //Files.write(Paths.get(JSONfile), toJSON().getBytes())
   }
   def moveBack(obj : thing, angle : Double): Unit={
     obj.shape.translateY.value-= playerSpeed*math.sin(angle)
@@ -465,7 +500,8 @@ object GUI extends JFXApp{
       obj.yPos = 20
     }
     ///**** Save the game to JSON
-    Files.write(Paths.get(JSONfile), toJSON().getBytes())
+    saveData()
+    //Files.write(Paths.get(JSONfile), toJSON().getBytes())
   }
   def rotateLeft(obj: thing): Unit ={
     obj.shape.rotate.value -= 2
@@ -477,6 +513,7 @@ object GUI extends JFXApp{
 
   //######Print out all player locations
   def playerLocs(): Unit = {
+    socket.emit("test")
     for (ident <- allTanks) {
       println(ident.toString+ " is at:\n Health: " + ident.health + "   X pos: "+ ident.xPos+ "   Y pos: " + ident.yPos+"\n")
     }
@@ -558,7 +595,8 @@ object GUI extends JFXApp{
         }
       }
     ///**** Save the game to JSON
-      Files.write(Paths.get(JSONfile), toJSON().getBytes())
+      //saveData()
+      //Files.write(Paths.get(JSONfile), toJSON().getBytes())
     }
     AnimationTimer(update).start()
   }
