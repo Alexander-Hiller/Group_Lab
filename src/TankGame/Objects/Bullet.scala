@@ -1,4 +1,5 @@
-package TankGame
+package TankGame.Objects
+
 import scalafx.scene.shape.Shape
 
 class Bullet(val name: String, val inShape: Shape) extends thing(name, inShape)  {
@@ -14,7 +15,7 @@ class Bullet(val name: String, val inShape: Shape) extends thing(name, inShape) 
   var xTar: Double =0
   var yTar: Double =0
   var shape:Shape = inShape
-
+  var rot: Double =0
 
   override def toString: String ={
     this.name

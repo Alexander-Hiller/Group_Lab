@@ -1,35 +1,26 @@
-package TankGame
-
-import java.io.FileNotFoundException
-import java.nio.file.{Files, Paths}
+package Test
 
 import TankGame.Objects.{Barrier, Bullet, Tank, thing}
-
 import io.socket.client.{IO, Socket}
 import io.socket.emitter.Emitter
-
-import scala.collection.mutable.ListBuffer
 import javafx.scene.input.{KeyCode, KeyEvent, MouseEvent}
 import scalafx.animation.AnimationTimer
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
-import scalafx.scene.control.{Button, TextField}
 import scalafx.scene._
-import scalafx.scene.paint.Color
-import scalafx.scene.shape.{Circle, Rectangle}
+import scalafx.scene.control.{Button, TextField}
 import scalafx.scene.layout._
 import scalafx.scene.media.Media
+import scalafx.scene.paint.Color
+import scalafx.scene.shape.{Circle, Rectangle}
 
-import scala.io.Source
+import scala.collection.mutable.ListBuffer
 //import scalafx.scene.media.MediaPlayer
 import java.io.File
+
 import javafx.scene.media.MediaPlayer
 import play.api.libs.json._
-
-import java.net.InetSocketAddress
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 //import akka.io.{IO, Tcp}
-import akka.util.ByteString
 
 class HandleMessagesFromPython() extends Emitter.Listener {
   override def call(objects: Object*): Unit = {
@@ -117,7 +108,6 @@ object GameClient extends JFXApp{
       playerName.disable = true
       button.disable = true
       generate.disable = true
-      saveData()
     }
     else if (flag!=0){
       button.text = "You're already in Game"
@@ -153,7 +143,9 @@ object GameClient extends JFXApp{
     saveData()
     //Files.write(Paths.get(JSONfile), toJSON().getBytes())
   }
-  //### LOGIC TO CREATE JSON STRING
+
+
+  //##### How to format the JSON String
   def toJSON(): String={
     var tankMap: Map[String,JsValue]=Map()
     var barMap: Map[String,JsValue]=Map()
@@ -161,31 +153,30 @@ object GameClient extends JFXApp{
     //map all tanks
     for(tank<-allTanks){
       var tempMap: Map[String,JsValue]=
-        Map("name"->Json.toJson(tank.toString),
-          "xPos"-> Json.toJson(tank.xPos),
-          "yPos"-> Json.toJson(tank.yPos),
-          "xTar"-> Json.toJson(tank.xTar),
-          "yTar"-> Json.toJson(tank.yTar),
-          "death"-> Json.toJson(tank.deathAnimator),
-          "wild"-> Json.toJson(tank.wild),
-          "health"-> Json.toJson(tank.health),
-          "rot"-> Json.toJson(tank.rot)
+                    Map("name"->Json.toJson(tank.toString),
+                    "xPos"-> Json.toJson(tank.xPos),
+                    "yPos"-> Json.toJson(tank.yPos),
+                    "xTar"-> Json.toJson(tank.xTar),
+                    "yTar"-> Json.toJson(tank.yTar),
+                    "death"-> Json.toJson(tank.deathAnimator),
+                    "wild"-> Json.toJson(tank.wild),
+                    "health"-> Json.toJson(tank.health)
         )
-      var newTank=Json.toJson(tempMap)
-      tankMap= tankMap ++ Map(tank.toString->newTank)
+        var newTank=Json.toJson(tempMap)
+        tankMap= tankMap ++ Map(tank.toString->newTank)
     }
     //map all barriera
     for(bar<-allBarriers){
       var tempMap: Map[String,JsValue]=
-        Map("name"->Json.toJson(bar.toString),
-          "xPos"-> Json.toJson(bar.xPos),
-          "yPos"-> Json.toJson(bar.yPos),
-          "xTar"-> Json.toJson(bar.xTar),
-          "yTar"-> Json.toJson(bar.yTar),
-          "death"-> Json.toJson(bar.deathAnimator),
-          "wild"-> Json.toJson(bar.wild),
-          "health"-> Json.toJson(bar.health)
-        )
+      Map("name"->Json.toJson(bar.toString),
+        "xPos"-> Json.toJson(bar.xPos),
+        "yPos"-> Json.toJson(bar.yPos),
+        "xTar"-> Json.toJson(bar.xTar),
+        "yTar"-> Json.toJson(bar.yTar),
+        "death"-> Json.toJson(bar.deathAnimator),
+        "wild"-> Json.toJson(bar.wild),
+        "health"-> Json.toJson(bar.health)
+      )
       //println(bar.toString)
       var newBar=Json.toJson(tempMap)
       barMap=barMap ++ Map(bar.toString->newBar)
@@ -194,16 +185,16 @@ object GameClient extends JFXApp{
     //map all bullets
     for(bull<-allBull){
       val tempMap: Map[String,JsValue]=
-        Map("name"->Json.toJson(bull.toString),
-          "xPos"-> Json.toJson(bull.xPos),
-          "yPos"-> Json.toJson(bull.yPos),
-          "xTar"-> Json.toJson(bull.xTar),
-          "yTar"-> Json.toJson(bull.yTar),
-          "death"-> Json.toJson(bull.deathAnimator),
-          "wild"-> Json.toJson(bull.wild),
-          "wild2"-> Json.toJson(bull.wild2),
-          "health"-> Json.toJson(bull.health)
-        )
+      Map("name"->Json.toJson(bull.toString),
+        "xPos"-> Json.toJson(bull.xPos),
+        "yPos"-> Json.toJson(bull.yPos),
+        "xTar"-> Json.toJson(bull.xTar),
+        "yTar"-> Json.toJson(bull.yTar),
+        "death"-> Json.toJson(bull.deathAnimator),
+        "wild"-> Json.toJson(bull.wild),
+        "wild2"-> Json.toJson(bull.wild2),
+        "health"-> Json.toJson(bull.health)
+      )
       var newBull=Json.toJson(tempMap)
       bullMap=bullMap++ Map(bull.toString->newBull)
     }
@@ -222,8 +213,6 @@ object GameClient extends JFXApp{
     Json.stringify(Json.toJson(thingMap))
 
   }
-
-
 
   //######### Create Objects from a JSON string
   def fromJSON(jsonGameState: String): Unit = {
@@ -254,6 +243,7 @@ object GameClient extends JFXApp{
             thing.yPos=yPos
             thing.health=health
             thing.wild=wild
+            thing.deathAnimator=death
           }
         }
       }
@@ -277,7 +267,6 @@ object GameClient extends JFXApp{
       val health: Int=(tElements(elem)\"health").as[Int]
       val wild:Double=(tElements(elem)\"wild").as[Double]
       val death:Double=(tElements(elem)\"death").as[Double]
-      val rot:Double=(tElements(elem)\"rot").as[Double]
       //If item already exists update it
       if(tankList.contains(name)){
         for(thing<-allTanks){
@@ -291,8 +280,7 @@ object GameClient extends JFXApp{
             thing.yTar=yTar
             thing.health=health
             thing.wild=wild
-            thing.rot=rot
-            thing.shape.rotate.value=rot
+            thing.deathAnimator=death
           }
         }
       }
@@ -329,6 +317,7 @@ object GameClient extends JFXApp{
               thing.yTar = yTar
               thing.health = health
               thing.wild = wild
+              thing.deathAnimator = death
             }
           }
         }
@@ -367,7 +356,7 @@ object GameClient extends JFXApp{
 
     val newBull: Circle = new Circle{
       for (ident <- allTanks) {
-        if (ident.toString == name) {
+        if (ident.toString == player) {
           startX = ident.xPos
           startY = ident.yPos
           centerX= startX   //ident.shape.translateX.value + tankWidth /2
@@ -377,7 +366,7 @@ object GameClient extends JFXApp{
         }
       }
     }
-    val tempBull: thing = new Bullet(name, newBull)
+    val tempBull: thing = new Bullet(player, newBull)
     tempBull.xPos= startX  //newBull.centerX.value + tankWidth /2
     tempBull.yPos= startY  //newBull.centerY.value + tankHeight /2
     tempBull.xTar = xTar
@@ -454,17 +443,8 @@ object GameClient extends JFXApp{
       }
     }
   }
-  def sendBullet(xTar: Double, yTar: Double, name: String, bullNum: Double): Unit ={
-    socket.emit("bull",xTar.toString,yTar.toString,name,bullNum.toString)
-  }
-  //sendBullet(event.getX, event.getY, tankName.toString, bullNum)
-  def sendMove(name:String,xPos:Double,yPos:Double):Unit ={
-    socket.emit("move",name.toString,xPos.toString,yPos.toString)
-  }
 
-  def sendRot(name:String,rot:Double):Unit ={
-    socket.emit("rot",name.toString,rot.toString)
-  }
+
   //########################## Movement of Tank Commands
   def moveFwd(obj : thing, angle : Double): Unit={
     obj.shape.translateY.value+= playerSpeed*math.sin(angle)
@@ -487,8 +467,8 @@ object GameClient extends JFXApp{
       obj.shape.translateY.value = 10
       obj.yPos = 20
     }
-    ///**** Save the game to server
-    sendMove(obj.toString,obj.xPos,obj.yPos)
+    ///**** Save the game to JSON
+    saveData()
     //Files.write(Paths.get(JSONfile), toJSON().getBytes())
   }
   def moveBack(obj : thing, angle : Double): Unit={
@@ -512,22 +492,21 @@ object GameClient extends JFXApp{
       obj.shape.translateY.value = 10
       obj.yPos = 20
     }
-    ///**** Save the game to server
-    sendMove(obj.toString,obj.xPos,obj.yPos)
+    ///**** Save the game to JSON
+    saveData()
     //Files.write(Paths.get(JSONfile), toJSON().getBytes())
   }
   def rotateLeft(obj: thing): Unit ={
     obj.shape.rotate.value -= 2
-    sendRot(obj.toString,obj.shape.rotate.value)
   }
   def rotateRight(obj: thing): Unit ={
     obj.shape.rotate.value += 2
-    sendRot(obj.toString,obj.shape.rotate.value)
   }
 
 
   //######Print out all player locations
   def playerLocs(): Unit = {
+    socket.emit("test")
     for (ident <- allTanks) {
       println(ident.toString+ " is at:\n Health: " + ident.health + "   X pos: "+ ident.xPos+ "   Y pos: " + ident.yPos+"\n")
     }
@@ -554,7 +533,7 @@ object GameClient extends JFXApp{
       addEventHandler(MouseEvent.MOUSE_CLICKED, (event: MouseEvent) => {
         //println("X: "+ event.getX + " Y:" +
         val bullNum:Double=Math.random()*1000
-        sendBullet(event.getX, event.getY, playerName.text.value, bullNum)
+        drawBullet(event.getX, event.getY, tankName.toString, bullNum)
       })
 
       }
@@ -584,6 +563,10 @@ object GameClient extends JFXApp{
 
       //For updating all the positions of the bullets
       for (bull<- allBull){
+        if(bull.health>0){
+          bullCollision(bull)
+          moveBull(bull)
+        }
         if (bull.health<=0){
           explode(bull)
         }
@@ -604,15 +587,70 @@ object GameClient extends JFXApp{
           allBarriers -= bar
         }
       }
+    ///**** Save the game to JSON
+      //saveData()
+      //Files.write(Paths.get(JSONfile), toJSON().getBytes())
     }
     AnimationTimer(update).start()
   }
 
 
 
+  //######## logic behind bullet movement
+  def moveBull(bull: thing):Unit ={
+    //computing angle towards clicked target
+    val angle: Double = math.atan((bull.yTar-bull.yPos)/(bull.xTar-bull.xPos))
 
 
+    //if angle is behind the tank
+    if ((bull.xTar - bull.wild) < 0) {
+      //angle = angle * -1
+      bull.shape.translateX.value -= playerSpeed * bulSpeed * math.cos(angle)
+      bull.shape.translateY.value -= playerSpeed * bulSpeed * math.sin(angle)
+      bull.xPos -= playerSpeed * bulSpeed * math.cos(angle)
+      bull.yPos -= playerSpeed * bulSpeed * math.sin(angle)
+    }
+    else {
+      bull.shape.translateX.value += playerSpeed * bulSpeed * math.cos(angle)
+      bull.shape.translateY.value += playerSpeed * bulSpeed * math.sin(angle)
+      bull.xPos += playerSpeed * bulSpeed * math.cos(angle)
+      bull.yPos += playerSpeed * bulSpeed * math.sin(angle)
+    }
+    bull.health -= 1
+    //stop bullet if it reaches destination
+    if((math.abs(bull.xPos-bull.xTar)<playerSpeed)& math.abs(bull.yPos-bull.yTar)<playerSpeed) bull.health=0
+  }
 
+
+  //####### logic behind bullet collisions
+  def bullCollision(bull: thing):Unit ={
+    //check for barrier collisions
+    for (barrier <- allBarriers) {
+      val width: Double = barrier.xTar/2
+      val height: Double = barrier.yTar/2
+
+      if ((bull.xPos< (barrier.xPos+width))&(bull.xPos > (barrier.xPos-width))){
+        if ((bull.yPos < (barrier.yPos + height))&(bull.yPos > (barrier.yPos - height))){
+          bull.health=0
+          barrier.health-=bulDmg
+          println("Barrier: " + barrier.toString + " is at "+ barrier.health + " health")
+        }
+      }
+    }
+    for (tank <- allTanks) {
+      val width: Double = tankWidth/2
+      val height: Double = tankWidth/2
+      if(tank.toString!=playerName.text.value){
+        if ((bull.xPos< (tank.xPos+width))&(bull.xPos > (tank.xPos-width))){
+          if ((bull.yPos < (tank.yPos + height))&(bull.yPos > (tank.yPos - height))) {
+            bull.health = 0
+            tank.health -= bulDmg
+            println("Player: " + tank.toString + " is at " + tank.health + " health")
+          }
+        }
+      }
+    }
+  }
 
 //############## animation of an object exploding
   def explode(obj: thing):Unit ={

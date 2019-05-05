@@ -28,7 +28,9 @@ class GameServer extends Actor {
   IO(Tcp) ! Bind(self, new InetSocketAddress("localhost", 65000))
   var clients: Set[ActorRef] = Set()
   var clientMap:Map[String,ActorRef]=Map()
-
+  //make a new game
+  val game = new Game
+  game.newGame()
   val JSONfile: String ="operatingFile.json"
   println("Game Server is up!")
 
@@ -46,6 +48,7 @@ class GameServer extends Actor {
       buffer= r.data.utf8String
       val parsed: JsValue = Json.parse(buffer)
       val action:String = (parsed \ "action").as[String]
+
       if(action=="connected"){
         try {
           state = Source.fromFile(JSONfile).mkString
@@ -57,10 +60,43 @@ class GameServer extends Actor {
         println("User Connected")
         this.clients.foreach((client: ActorRef) => client ! Write(ByteString(message)))
       }
-      if(action=="disconnected"){
+
+      else if(action=="disconnected"){
         println("User disconnected")
       }
-      if(action=="update"){
+      else if(action=="move"){
+        val name:String = (parsed \ "name").as[String]
+        val xPos:String =(parsed \ "xPos").as[String]
+        val yPos:String =(parsed \ "yPos").as[String]
+        for(tank<-game.allTanks){
+          if(tank.toString==name) {
+            tank.xPos = xPos.toDouble
+            tank.yPos = yPos.toDouble
+            tank.shape.translateX.value = xPos.toDouble
+            tank.shape.translateY.value = yPos.toDouble
+          }
+        }
+      }
+      else if(action=="rot"){
+        val name:String = (parsed \ "name").as[String]
+        val rot:String =(parsed \ "rot").as[String]
+        for(tank<-game.allTanks){
+          if(tank.toString==name) {
+            tank.shape.rotate.value= rot.toDouble
+          }
+        }
+      }
+
+      else if(action=="bull"){
+        val name:String = (parsed \ "name").as[String]
+        val xTar:String=(parsed\"xTar").as[String]
+        val yTar:String=(parsed\"yTar").as[String]
+        val bullNum:String=(parsed\"bullNum").as[String]
+        println("bullet fired from: "+ name)
+        game.newBullet(xTar.toDouble, yTar.toDouble, name,bullNum.toDouble)
+      }
+
+      else if(action=="update"){
         val JSONdata:String = (parsed \ "JSONdata").as[String]
         println(JSONdata)
         Files.write(Paths.get(JSONfile), JSONdata.getBytes())
@@ -73,13 +109,19 @@ class GameServer extends Actor {
         val message: String = state+delimiter
         this.clients.foreach((client: ActorRef) => client ! Write(ByteString(message)))
       }
-      if(action=="test"){
+
+      else if(action=="test"){
         println("received a test")
         //this.clients.foreach((client: ActorRef) => client ! Write(ByteString("Test Satisfactory")))
       }
 
+      else{
+        println("Action \""+action+"\" not understood")
+      }
+
 
     case UpdateGames =>
+      game.update()
       try {
         state = Source.fromFile(JSONfile).mkString
       }catch{
@@ -103,7 +145,7 @@ object GameServer{
     import actorSystem.dispatcher
 
     val server = actorSystem.actorOf(Props(classOf[GameServer]))
-    actorSystem.scheduler.schedule(0 milliseconds, 100 milliseconds, server, UpdateGames)
+    actorSystem.scheduler.schedule(0 milliseconds, 50 milliseconds, server, UpdateGames)
     //actorSystem.scheduler.schedule(0 milliseconds, 2000 milliseconds, server, SendToClients("Ping from server"))
   }
 }

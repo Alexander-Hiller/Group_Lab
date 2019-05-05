@@ -75,6 +75,21 @@ def update(json):
     message = {"JSONdata": json, "action": "update"}
     send_to_scala(message)
 
+@socket_server.on('move')
+def move(name, xPos, yPos):
+    message = {"name": name, "action": "move", "xPos": xPos, "yPos": yPos}
+    send_to_scala(message)
+
+@socket_server.on('rot')
+def rot(name, rot):
+    message = {"name": name, "action": "rot", "rot": rot}
+    send_to_scala(message)
+
+@socket_server.on('bull')
+def bull(xTar,yTar,name,bullNum):
+    message = {"name": name, "action": "bull", "xTar": xTar,"yTar":yTar,"bullNum":bullNum}
+    send_to_scala(message)
+
 @app.route('/')
 def index():
     return send_from_directory('static', 'index.html')
