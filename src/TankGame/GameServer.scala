@@ -145,7 +145,7 @@ object GameServer{
     import actorSystem.dispatcher
 
     val server = actorSystem.actorOf(Props(classOf[GameServer]))
-    actorSystem.scheduler.schedule(0 milliseconds, 50 milliseconds, server, UpdateGames)
+    actorSystem.scheduler.schedule(0 milliseconds, 30 milliseconds, server, UpdateGames)
     //actorSystem.scheduler.schedule(0 milliseconds, 2000 milliseconds, server, SendToClients("Ping from server"))
   }
 }

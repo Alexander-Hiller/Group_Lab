@@ -323,6 +323,8 @@ object GameClient extends JFXApp{
           if(name==thing.toString){
             if(wild2==thing.wild2) {
               thing.health = health
+              thing.shape.translateX=xPos
+              thing.shape.translateY=yPos
               thing.xPos = xPos
               thing.yPos = yPos
               thing.xTar = xTar
@@ -344,13 +346,6 @@ object GameClient extends JFXApp{
     if(gameState.length > 30){
       fromJSON(gameState)
     }
-    /*
-    try {
-      fromJSON(Source.fromFile(JSONfile).mkString)
-    }catch{
-      case ex: FileNotFoundException => ex.printStackTrace()
-    }
-    */
 
   }
 
