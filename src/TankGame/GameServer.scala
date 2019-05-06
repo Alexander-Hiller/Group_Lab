@@ -82,18 +82,27 @@ class GameServer extends Actor {
         val rot:String =(parsed \ "rot").as[String]
         for(tank<-game.allTanks){
           if(tank.toString==name) {
+            tank.rot = rot.toDouble
             tank.shape.rotate.value= rot.toDouble
           }
         }
       }
+      else if(action=="newTank"){
+        val name:String = (parsed \ "name").as[String]
+        val xPos:String =(parsed \ "xPos").as[String]
+        val yPos:String =(parsed \ "yPos").as[String]
+        game.addTank(xPos.toDouble,yPos.toDouble,name)
+      }
 
       else if(action=="bull"){
-        val name:String = (parsed \ "name").as[String]
+        val name:String=(parsed \ "name").as[String]
         val xTar:String=(parsed\"xTar").as[String]
         val yTar:String=(parsed\"yTar").as[String]
+        val xPos:String=(parsed\"xPos").as[String]
+        val yPos:String=(parsed\"yPos").as[String]
         val bullNum:String=(parsed\"bullNum").as[String]
         println("bullet fired from: "+ name)
-        game.newBullet(xTar.toDouble, yTar.toDouble, name,bullNum.toDouble)
+        game.newBullet(xPos.toDouble,yPos.toDouble,xTar.toDouble, yTar.toDouble, name,bullNum.toDouble)
       }
 
       else if(action=="update"){
@@ -145,7 +154,7 @@ object GameServer{
     import actorSystem.dispatcher
 
     val server = actorSystem.actorOf(Props(classOf[GameServer]))
-    actorSystem.scheduler.schedule(0 milliseconds, 30 milliseconds, server, UpdateGames)
+    actorSystem.scheduler.schedule(0 milliseconds, 25 milliseconds, server, UpdateGames)
     //actorSystem.scheduler.schedule(0 milliseconds, 2000 milliseconds, server, SendToClients("Ping from server"))
   }
 }

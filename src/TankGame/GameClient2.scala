@@ -31,10 +31,10 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 //import akka.io.{IO, Tcp}
 import akka.util.ByteString
 
-class HandleMessagesFromPython() extends Emitter.Listener {
+class FromPython() extends Emitter.Listener {
   override def call(objects: Object*): Unit = {
     val stateData = objects.apply(0).toString
-    GameClient.gameState =stateData
+    GameClient2.gameState =stateData
     /*
     for(bull<-GameClient.allBull) {
       GameClient.moveBull(bull)
@@ -45,10 +45,10 @@ class HandleMessagesFromPython() extends Emitter.Listener {
 }
 
 
-object GameClient extends JFXApp{
+object GameClient2 extends JFXApp{
   var gameState: String = ""
   var socket: Socket = IO.socket("http://localhost:60000/")
-  socket.on("message", new HandleMessagesFromPython)
+  socket.on("message", new FromPython)
   socket.connect()
 
   //### Governing Definitions

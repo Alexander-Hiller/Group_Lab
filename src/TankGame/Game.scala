@@ -66,7 +66,7 @@ class Game {
     var bullMap: Map[String,JsValue]=Map()
     //map all tanks
     for(tank<-allTanks) {
-      if (tank.health > 0) {
+      if (tank.deathAnimator <= 40) {
         var tempMap: Map[String, JsValue] =
           Map("name" -> Json.toJson(tank.toString),
             "xPos" -> Json.toJson(tank.xPos),
@@ -81,11 +81,11 @@ class Game {
         var newTank = Json.toJson(tempMap)
         tankMap = tankMap ++ Map(tank.toString -> newTank)
       }
-      else allTanks-=tank
+      //else allTanks-=tank
     }
     //map all barriera
     for(bar<-allBarriers) {
-      if (bar.health > 0){
+      if (bar.deathAnimator <= 40){
         var tempMap: Map[String, JsValue] =
           Map("name" -> Json.toJson(bar.toString),
             "xPos" -> Json.toJson(bar.xPos),
@@ -100,13 +100,13 @@ class Game {
         var newBar = Json.toJson(tempMap)
         barMap = barMap ++ Map(bar.toString -> newBar)
       }
-      else allBarriers-=bar
+      //else allBarriers-=bar
     }
 
 
     //map all bullets
     for(bull<-allBull) {
-      if (bull.health > 0) {
+      if (bull.deathAnimator <= 40) {
         val tempMap: Map[String, JsValue] =
           Map("name" -> Json.toJson(bull.toString),
             "xPos" -> Json.toJson(bull.xPos),
@@ -121,7 +121,7 @@ class Game {
         var newBull = Json.toJson(tempMap)
         bullMap = bullMap ++ Map(bull.toString -> newBull)
       }
-      else allBull-=bull
+      //else allBull-=bull
     }
 
     //convert all to JSON
@@ -255,21 +255,16 @@ class Game {
 
 
 
-  def newBullet(xTar: Double, yTar: Double, name:String,bullNum:Double): Unit = {
+  def newBullet(xPos:Double, yPos:Double, xTar: Double, yTar: Double, name:String,bullNum:Double): Unit = {
     var startX: Double = 0
     var startY: Double = 0
-
     val newBull: Circle = new Circle {
-      for (ident <- allTanks) {
-        if (ident.toString == name) {
-          startX = ident.xPos
-          startY = ident.yPos
+          startX = xPos
+          startY = yPos
           centerX = startX //ident.shape.translateX.value + tankWidth /2
           centerY = startY //ident.shape.translateY.value + tankHeight /2
           radius = bullRadius
           fill = Color.Black
-        }
-      }
     }
     val tempBull: thing = new Bullet(name, newBull)
     tempBull.xPos = startX //newBull.centerX.value + tankWidth /2
@@ -344,58 +339,81 @@ class Game {
     //computing angle towards clicked target
     val angle: Double = math.atan((bull.yTar-bull.yPos)/(bull.xTar-bull.xPos))
 
-
-    //if angle is behind the tank
-    if ((bull.xTar - bull.wild) < 0) {
-      //angle = angle * -1
-      bull.shape.translateX.value -= playerSpeed * bulSpeed * math.cos(angle)
-      bull.shape.translateY.value -= playerSpeed * bulSpeed * math.sin(angle)
-      bull.xPos -= playerSpeed * bulSpeed * math.cos(angle)
-      bull.yPos -= playerSpeed * bulSpeed * math.sin(angle)
-    }
-    else {
-      bull.shape.translateX.value += playerSpeed * bulSpeed * math.cos(angle)
-      bull.shape.translateY.value += playerSpeed * bulSpeed * math.sin(angle)
-      bull.xPos += playerSpeed * bulSpeed * math.cos(angle)
-      bull.yPos += playerSpeed * bulSpeed * math.sin(angle)
+    if(bull.health>0) {
+      //if angle was behind the tank
+      if ((bull.xTar - bull.wild) < 0) {
+        //angle = angle * -1
+        bull.xPos -= playerSpeed * bulSpeed * math.cos(angle)
+        bull.yPos -= playerSpeed * bulSpeed * math.sin(angle)
+      }
+      else {
+        bull.xPos += playerSpeed * bulSpeed * math.cos(angle)
+        bull.yPos += playerSpeed * bulSpeed * math.sin(angle)
+      }
     }
     bull.health -= 1
     //stop bullet if it reaches destination
     if((math.abs(bull.xPos-bull.xTar)<playerSpeed)& math.abs(bull.yPos-bull.yTar)<playerSpeed) bull.health=0
+
+   // println("Bullet ("+bull.toString+"): "++bull.xPos.toString+","+bull.yPos.toString)
   }
 
   //####### logic behind bullet collisions
   def bullCollision(bull: thing):Unit ={
     //check for barrier collisions
-    for (barrier <- allBarriers) {
-      val width: Double = barrier.xTar/2
-      val height: Double = barrier.yTar/2
+    if(bull.health>0) {
+      for (barrier <- allBarriers) {
+        val width: Double = barrier.xTar / 2
+        val height: Double = barrier.yTar / 2
 
-      if ((bull.xPos< (barrier.xPos+width))&(bull.xPos > (barrier.xPos-width))){
-        if ((bull.yPos < (barrier.yPos + height))&(bull.yPos > (barrier.yPos - height))){
-          bull.health=0
-          barrier.health-=bulDmg
-          println("Barrier: " + barrier.toString + " is at "+ barrier.health + " health")
+        if ((bull.xPos < (barrier.xPos + width)) & (bull.xPos > (barrier.xPos - width))) {
+          if ((bull.yPos < (barrier.yPos + height)) & (bull.yPos > (barrier.yPos - height))) {
+            bull.health = 0
+            barrier.health -= bulDmg
+            println("Barrier: " + barrier.toString + " is at " + barrier.health + " health")
+          }
         }
       }
-    }
-    for (tank <- allTanks) {
-      val width: Double = tankWidth/2
-      val height: Double = tankWidth/2
-      if(tank.toString!=bull.toString){
-        if ((bull.xPos< (tank.xPos+width))&(bull.xPos > (tank.xPos-width))){
-          if ((bull.yPos < (tank.yPos + height))&(bull.yPos > (tank.yPos - height))) {
-            bull.health = 0
-            tank.health -= bulDmg
-            println("Player: " + tank.toString + " is at " + tank.health + " health")
+      for (tank <- allTanks) {
+        val width: Double = tankWidth / 2
+        val height: Double = tankWidth / 2
+        if (tank.toString != bull.toString) {
+          if ((bull.xPos < (tank.xPos + width)) & (bull.xPos > (tank.xPos - width))) {
+            if ((bull.yPos < (tank.yPos + height)) & (bull.yPos > (tank.yPos - height))) {
+              bull.health = 0
+              tank.health -= bulDmg
+              println("Player: " + tank.toString + " is at " + tank.health + " health")
+            }
           }
         }
       }
     }
   }
 
+  def deathCheck(): Unit ={
+    for(bull<-allBull){
+      if (bull.health<=0){
+        bull.deathAnimator +=1
+        if (bull.deathAnimator>=120)allBull-=bull
+      }
+    }
+    for(tank<-allTanks){
+      if (tank.health<=0){
+        tank.deathAnimator +=1
+        if (tank.deathAnimator>=120)allTanks-=tank
+      }
+    }
+    for(bar<-allBarriers){
+      if (bar.health<=0){
+        bar.deathAnimator +=1
+        if (bar.deathAnimator>=120)allBarriers-=bar
+      }
+    }
+  }
+
   def update(): Unit= {
     for (bull <- allBull) {
+      deathCheck()
       bullCollision(bull)
       moveBull(bull)
     }

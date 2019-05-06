@@ -86,8 +86,13 @@ def rot(name, rot):
     send_to_scala(message)
 
 @socket_server.on('bull')
-def bull(xTar,yTar,name,bullNum):
-    message = {"name": name, "action": "bull", "xTar": xTar,"yTar":yTar,"bullNum":bullNum}
+def bull(xPos,yPos,xTar,yTar,name,bullNum):
+    message = {"name": name, "action": "bull", "xTar": xTar,"yTar":yTar,"bullNum":bullNum,"xPos": xPos,"yPos":yPos}
+    send_to_scala(message)
+
+@socket_server.on('newTank')
+def bull(xPos,yPos,name):
+    message = {"name": name, "action": "newTank", "xPos": xPos,"yPos":yPos}
     send_to_scala(message)
 
 @app.route('/')
