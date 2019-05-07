@@ -17,7 +17,7 @@ class Game {
   val tankHeight: Double = 20
   val tankWidth: Double = 40
   var bullRadius: Double = 5
-  var flag: Int =0
+  var flag: Int = 0
   var tankName: Int = 0
   //var barName: Int = 0
   var player: String = ""
@@ -27,32 +27,117 @@ class Game {
 
   val maxBar: Int = 30
   val minBar: Int = 5
-  val JSONfile: String ="operatingFile.json"
+  val JSONfile: String = "operatingFile.json"
 
   //###### Object Groups and lists
   var allTanks = new ListBuffer[thing]()
   var allBull = new ListBuffer[thing]()
   var allBarriers = new ListBuffer[thing]()
 
-
+  var wallLocations = List(
+    //left side
+    new GridLocation(0, 0),
+    new GridLocation(0, 1),
+    new GridLocation(0, 2),
+    new GridLocation(0, 3),
+    new GridLocation(0, 4),
+    new GridLocation(0, 5),
+    new GridLocation(0, 6),
+    new GridLocation(0, 7),
+    new GridLocation(0, 8),
+    new GridLocation(0, 9),
+    new GridLocation(0, 10),
+    new GridLocation(0, 11),
+    new GridLocation(0, 12),
+    new GridLocation(0, 13),
+    new GridLocation(0, 14),
+    new GridLocation(0, 15),
+    new GridLocation(0, 16),
+    new GridLocation(0, 17),
+    new GridLocation(0, 18),
+    new GridLocation(0, 19),
+    //right side
+    new GridLocation(19, 0),
+    new GridLocation(19, 1),
+    new GridLocation(19, 2),
+    new GridLocation(19, 3),
+    new GridLocation(19, 4),
+    new GridLocation(19, 5),
+    new GridLocation(19, 6),
+    new GridLocation(19, 7),
+    new GridLocation(19, 8),
+    new GridLocation(19, 9),
+    new GridLocation(19, 10),
+    new GridLocation(19, 11),
+    new GridLocation(19, 12),
+    new GridLocation(19, 13),
+    new GridLocation(19, 14),
+    new GridLocation(19, 15),
+    new GridLocation(19, 16),
+    new GridLocation(19, 17),
+    new GridLocation(19, 18),
+    new GridLocation(19, 19),
+    //top
+    new GridLocation(0, 0),
+    new GridLocation(1, 0),
+    new GridLocation(2, 0),
+    new GridLocation(3, 0),
+    new GridLocation(4, 0),
+    new GridLocation(5, 0),
+    new GridLocation(6, 0),
+    new GridLocation(7, 0),
+    new GridLocation(8, 0),
+    new GridLocation(9, 0),
+    new GridLocation(10, 0),
+    new GridLocation(11, 0),
+    new GridLocation(12, 0),
+    new GridLocation(13, 0),
+    new GridLocation(14, 0),
+    new GridLocation(15, 0),
+    new GridLocation(16, 0),
+    new GridLocation(17, 0),
+    new GridLocation(18, 0),
+    new GridLocation(19, 0),
+    //bottom
+    new GridLocation(0, 19),
+    new GridLocation(1, 19),
+    new GridLocation(2, 19),
+    new GridLocation(3, 19),
+    new GridLocation(4, 19),
+    new GridLocation(5, 19),
+    new GridLocation(6, 19),
+    new GridLocation(7, 19),
+    new GridLocation(8, 19),
+    new GridLocation(9, 19),
+    new GridLocation(10, 19),
+    new GridLocation(11, 19),
+    new GridLocation(12, 19),
+    new GridLocation(13, 19),
+    new GridLocation(14, 19),
+    new GridLocation(15, 19),
+    new GridLocation(16, 19),
+    new GridLocation(17, 19),
+    new GridLocation(18, 19),
+    new GridLocation(19, 19)
+  )
 
   //### New Game (run this on server load)
   def newGame(): Unit = {
     //Delete Any Existing Barriers
-    for (barrier<- allBarriers){
+    for (barrier <- allBarriers) {
       allBarriers -= barrier
     }
     //Delete Any Existing Tanks
-    for (tank<- allTanks){
-      allTanks-= tank
+    for (tank <- allTanks) {
+      allTanks -= tank
     }
     //### Spawn n number of barriers
-    for(i<-0 to (math.random()*maxBar).toInt + minBar) {
-      val xPos: Double = math.random()*windowWidth
-      val yPos: Double= math.random()*windowHeight
-      val w: Double = math.random()*50 + 20
-      val l: Double = math.random()*50 + 20
-      addBarrier(xPos,yPos,i.toString,w,l)
+    for (i <- 0 to (math.random() * maxBar).toInt + minBar) {
+      val xPos: Double = math.random() * windowWidth
+      val yPos: Double = math.random() * windowHeight
+      val w: Double = math.random() * 50 + 20
+      val l: Double = math.random() * 50 + 20
+      addBarrier(xPos, yPos, i.toString, w, l)
     }
     // Make new JSON file
     Files.write(Paths.get(JSONfile), toJSON().getBytes())
@@ -60,12 +145,13 @@ class Game {
 
 
   //### LOGIC TO CREATE JSON STRING
-  def toJSON(): String={
-    var tankMap: Map[String,JsValue]=Map()
-    var barMap: Map[String,JsValue]=Map()
-    var bullMap: Map[String,JsValue]=Map()
+  def toJSON(): String = {
+    var tankMap: Map[String, JsValue] = Map()
+    var barMap: Map[String, JsValue] = Map()
+    var bullMap: Map[String, JsValue] = Map()
+
     //map all tanks
-    for(tank<-allTanks) {
+    for (tank <- allTanks) {
       if (tank.deathAnimator <= 40) {
         var tempMap: Map[String, JsValue] =
           Map("name" -> Json.toJson(tank.toString),
@@ -84,8 +170,8 @@ class Game {
       //else allTanks-=tank
     }
     //map all barriera
-    for(bar<-allBarriers) {
-      if (bar.deathAnimator <= 40){
+    for (bar <- allBarriers) {
+      if (bar.deathAnimator <= 40) {
         var tempMap: Map[String, JsValue] =
           Map("name" -> Json.toJson(bar.toString),
             "xPos" -> Json.toJson(bar.xPos),
@@ -105,7 +191,7 @@ class Game {
 
 
     //map all bullets
-    for(bull<-allBull) {
+    for (bull <- allBull) {
       if (bull.deathAnimator <= 40) {
         val tempMap: Map[String, JsValue] =
           Map("name" -> Json.toJson(bull.toString),
@@ -129,10 +215,12 @@ class Game {
     val bars: JsValue = Json.toJson(barMap)
     val bulls: JsValue = Json.toJson(bullMap)
 
-    val thingMap: Map[String, JsValue]=Map(
-      "tanks"->tanks,
-      "bars"->bars,
-      "bulls"->bulls
+    val thingMap: Map[String, JsValue] = Map(
+      "tanks" -> tanks,
+      "bars" -> bars,
+      "bulls" -> bulls,
+      "gridSize" -> Json.toJson(Map("x" -> 20, "y" -> 20)),
+//      "walls" -> Json.toJson(this.wallLocations.map({ w => Json.toJson(Map("x" -> w.x, "y" -> w.y)) }))
     )
 
     Json.stringify(Json.toJson(thingMap))
@@ -145,97 +233,97 @@ class Game {
     val parsed: JsValue = Json.parse(jsonGameState)
 
     //Barrier Update and Management
-    val elements = (parsed \ "bars").as [Map[String,JsValue]]
-    var barList:List[String] = List()
-    for(bar<-allBarriers){
-      barList::=bar.toString
+    val elements = (parsed \ "bars").as[Map[String, JsValue]]
+    var barList: List[String] = List()
+    for (bar <- allBarriers) {
+      barList ::= bar.toString
     }
-    for(elem<-elements.keys){
-      val name: String = (elements(elem)\"name").as[String]
-      val xPos: Double = (elements(elem)\"xPos").as[Double]
-      val yPos: Double = (elements(elem)\"yPos").as[Double]
-      val w:Double=(elements(elem)\"xTar").as[Double]
-      val l:Double=(elements(elem)\"yTar").as[Double]
-      val health: Int=(elements(elem)\"health").as[Int]
-      val wild:Double=(elements(elem)\"wild").as[Double]
-      val death:Double=(elements(elem)\"death").as[Double]
+    for (elem <- elements.keys) {
+      val name: String = (elements(elem) \ "name").as[String]
+      val xPos: Double = (elements(elem) \ "xPos").as[Double]
+      val yPos: Double = (elements(elem) \ "yPos").as[Double]
+      val w: Double = (elements(elem) \ "xTar").as[Double]
+      val l: Double = (elements(elem) \ "yTar").as[Double]
+      val health: Int = (elements(elem) \ "health").as[Int]
+      val wild: Double = (elements(elem) \ "wild").as[Double]
+      val death: Double = (elements(elem) \ "death").as[Double]
       //If item already exists update it
-      if(barList.contains(name)){
-        for(thing<-allBarriers){
-          if(name==thing.toString){
-            thing.health=health
-            thing.xPos=xPos
-            thing.yPos=yPos
-            thing.health=health
-            thing.wild=wild
+      if (barList.contains(name)) {
+        for (thing <- allBarriers) {
+          if (name == thing.toString) {
+            thing.health = health
+            thing.xPos = xPos
+            thing.yPos = yPos
+            thing.health = health
+            thing.wild = wild
           }
         }
       }
       // else add it to the game
-      else addBarrier(xPos,yPos,name,w,l)
+      else addBarrier(xPos, yPos, name, w, l)
     }
 
 
     //Tank Update and Management
-    val tElements = (parsed \ "tanks").as [Map[String,JsValue]]
-    var tankList:List[String] = List()
-    for(tank<-allTanks){
-      tankList::=tank.toString
+    val tElements = (parsed \ "tanks").as[Map[String, JsValue]]
+    var tankList: List[String] = List()
+    for (tank <- allTanks) {
+      tankList ::= tank.toString
     }
-    for(elem<-tElements.keys){
-      val name: String = (tElements(elem)\"name").as[String]
-      val xPos: Double = (tElements(elem)\"xPos").as[Double]
-      val yPos: Double = (tElements(elem)\"yPos").as[Double]
-      val xTar:Double=(tElements(elem)\"xTar").as[Double]
-      val yTar:Double=(tElements(elem)\"yTar").as[Double]
-      val health: Int=(tElements(elem)\"health").as[Int]
-      val wild:Double=(tElements(elem)\"wild").as[Double]
-      val death:Double=(tElements(elem)\"death").as[Double]
-      val rot:Double=(tElements(elem)\"rot").as[Double]
+    for (elem <- tElements.keys) {
+      val name: String = (tElements(elem) \ "name").as[String]
+      val xPos: Double = (tElements(elem) \ "xPos").as[Double]
+      val yPos: Double = (tElements(elem) \ "yPos").as[Double]
+      val xTar: Double = (tElements(elem) \ "xTar").as[Double]
+      val yTar: Double = (tElements(elem) \ "yTar").as[Double]
+      val health: Int = (tElements(elem) \ "health").as[Int]
+      val wild: Double = (tElements(elem) \ "wild").as[Double]
+      val death: Double = (tElements(elem) \ "death").as[Double]
+      val rot: Double = (tElements(elem) \ "rot").as[Double]
       //If item already exists update it
-      if(tankList.contains(name)){
-        for(thing<-allTanks){
-          if(name==thing.toString){
-            thing.shape.translateX.value=xPos-tankWidth/2
-            thing.shape.translateY.value=yPos-tankHeight/2
-            thing.health=health
-            thing.xPos=xPos
-            thing.yPos=yPos
-            thing.xTar=xTar
-            thing.yTar=yTar
-            thing.health=health
-            thing.wild=wild
-            thing.rot=rot
-            thing.shape.rotate.value=rot
+      if (tankList.contains(name)) {
+        for (thing <- allTanks) {
+          if (name == thing.toString) {
+            thing.shape.translateX.value = xPos - tankWidth / 2
+            thing.shape.translateY.value = yPos - tankHeight / 2
+            thing.health = health
+            thing.xPos = xPos
+            thing.yPos = yPos
+            thing.xTar = xTar
+            thing.yTar = yTar
+            thing.health = health
+            thing.wild = wild
+            thing.rot = rot
+            thing.shape.rotate.value = rot
           }
         }
       }
       // else add it to the game
-      else addTank(xPos,yPos,name)
+      else addTank(xPos, yPos, name)
     }
 
     //Bullet Update and Management
-    val bElements = (parsed \ "bulls").as [Map[String,JsValue]]
-    var bullList:List[String] = List()
-    for(bull<-allBull){
-      bullList::=bull.toString
+    val bElements = (parsed \ "bulls").as[Map[String, JsValue]]
+    var bullList: List[String] = List()
+    for (bull <- allBull) {
+      bullList ::= bull.toString
     }
-    for(elem<-bElements.keys){
+    for (elem <- bElements.keys) {
 
-      val name: String = (bElements(elem)\"name").as[String]
-      val xPos: Double = (bElements(elem)\"xPos").as[Double]
-      val yPos: Double = (bElements(elem)\"yPos").as[Double]
-      val xTar:Double=(bElements(elem)\"xTar").as[Double]
-      val yTar:Double=(bElements(elem)\"yTar").as[Double]
-      val health: Int=(bElements(elem)\"health").as[Int]
-      val wild:Double=(bElements(elem)\"wild").as[Double]
-      var wild2:Double =(bElements(elem)\"wild2").as[Double]
-      val death:Double=(bElements(elem)\"death").as[Double]
+      val name: String = (bElements(elem) \ "name").as[String]
+      val xPos: Double = (bElements(elem) \ "xPos").as[Double]
+      val yPos: Double = (bElements(elem) \ "yPos").as[Double]
+      val xTar: Double = (bElements(elem) \ "xTar").as[Double]
+      val yTar: Double = (bElements(elem) \ "yTar").as[Double]
+      val health: Int = (bElements(elem) \ "health").as[Int]
+      val wild: Double = (bElements(elem) \ "wild").as[Double]
+      var wild2: Double = (bElements(elem) \ "wild2").as[Double]
+      val death: Double = (bElements(elem) \ "death").as[Double]
       //If item already exists update it
-      if(bullList.contains(name)){
-        for(thing<-allBull){
-          if(name==thing.toString){
-            if(wild2==thing.wild2) {
+      if (bullList.contains(name)) {
+        for (thing <- allBull) {
+          if (name == thing.toString) {
+            if (wild2 == thing.wild2) {
               thing.health = health
               thing.xPos = xPos
               thing.yPos = yPos
@@ -248,23 +336,21 @@ class Game {
         }
       }
       // else add it to the game
-      else addBullet(name,xPos,yPos,xTar,yTar,health,wild,wild2,death)
+      else addBullet(name, xPos, yPos, xTar, yTar, health, wild, wild2, death)
     }
   }
 
 
-
-
-  def newBullet(xPos:Double, yPos:Double, xTar: Double, yTar: Double, name:String,bullNum:Double): Unit = {
+  def newBullet(xPos: Double, yPos: Double, xTar: Double, yTar: Double, name: String, bullNum: Double): Unit = {
     var startX: Double = 0
     var startY: Double = 0
     val newBull: Circle = new Circle {
-          startX = xPos
-          startY = yPos
-          centerX = startX //ident.shape.translateX.value + tankWidth /2
-          centerY = startY //ident.shape.translateY.value + tankHeight /2
-          radius = bullRadius
-          fill = Color.Black
+      startX = xPos
+      startY = yPos
+      centerX = startX //ident.shape.translateX.value + tankWidth /2
+      centerY = startY //ident.shape.translateY.value + tankHeight /2
+      radius = bullRadius
+      fill = Color.Black
     }
     val tempBull: thing = new Bullet(name, newBull)
     tempBull.xPos = startX //newBull.centerX.value + tankWidth /2
@@ -277,34 +363,33 @@ class Game {
   }
 
 
-
   //######## Bullet Spawner
-  def addBullet(name:String,xPos:Double,yPos:Double,xTar:Double,yTar:Double,health:Int,wild:Double,wild2:Double,death:Double): Unit ={
+  def addBullet(name: String, xPos: Double, yPos: Double, xTar: Double, yTar: Double, health: Int, wild: Double, wild2: Double, death: Double): Unit = {
     var startX: Double = 0
     var startY: Double = 0
 
-    val newBull: Circle = new Circle{
-          startX = xPos
-          startY = yPos
-          centerX= startX   //ident.shape.translateX.value + tankWidth /2
-          centerY= startY   //ident.shape.translateY.value + tankHeight /2
-          radius = bullRadius
-          fill = Color.Black
+    val newBull: Circle = new Circle {
+      startX = xPos
+      startY = yPos
+      centerX = startX //ident.shape.translateX.value + tankWidth /2
+      centerY = startY //ident.shape.translateY.value + tankHeight /2
+      radius = bullRadius
+      fill = Color.Black
 
     }
     val tempBull: thing = new Bullet(name, newBull)
-    tempBull.xPos= startX  //newBull.centerX.value + tankWidth /2
-    tempBull.yPos= startY  //newBull.centerY.value + tankHeight /2
+    tempBull.xPos = startX //newBull.centerX.value + tankWidth /2
+    tempBull.yPos = startY //newBull.centerY.value + tankHeight /2
     tempBull.xTar = xTar
     tempBull.yTar = yTar
     tempBull.wild = wild
     tempBull.wild2 = wild2
-    tempBull.health=health
-    tempBull.deathAnimator=death
-    allBull+= tempBull
+    tempBull.health = health
+    tempBull.deathAnimator = death
+    allBull += tempBull
   }
 
-  def addTank(centerX: Double, centerY: Double, name:String): Unit = {
+  def addTank(centerX: Double, centerY: Double, name: String): Unit = {
     val newTank = new Rectangle() {
       width = tankWidth
       height = tankHeight
@@ -312,34 +397,35 @@ class Game {
       translateY = centerY - tankHeight / 2.0
       fill = Color.OliveDrab
     }
-    val tempTank: thing = new Tank(name,newTank)
-    tempTank.xPos=centerX //- tankWidth / 2.0
-    tempTank.yPos=centerY //- tankHeight / 2.0
+    val tempTank: thing = new Tank(name, newTank)
+    tempTank.xPos = centerX //- tankWidth / 2.0
+    tempTank.yPos = centerY //- tankHeight / 2.0
     allTanks += tempTank
   }
 
-  def addBarrier(centerX: Double, centerY: Double, name:String, w: Double, l:Double): Unit = {
+  def addBarrier(centerX: Double, centerY: Double, name: String, w: Double, l: Double): Unit = {
     val newBarrier = new Rectangle() {
-      width=w
-      height=l
+      width = w
+      height = l
       translateX = centerX - w / 2.0
       translateY = centerY - l / 2.0
-      fill = Color.rgb((math.random()*255).toInt, (math.random()*255).toInt,(math.random()*255).toInt)
+      fill = Color.rgb((math.random() * 255).toInt, (math.random() * 255).toInt, (math.random() * 255).toInt)
     }
-    val tempBar: thing = new Barrier(name,newBarrier)
-    tempBar.xPos=centerX //- w / 2.0
-    tempBar.yPos=centerY //- l / 2.0
+    val tempBar: thing = new Barrier(name, newBarrier)
+    tempBar.xPos = centerX //- w / 2.0
+    tempBar.yPos = centerY //- l / 2.0
     //store height and width in target variables
     tempBar.xTar = w
     tempBar.yTar = l
     allBarriers += tempBar
   }
-  //######## logic behind bullet movement
-  def moveBull(bull: thing):Unit ={
-    //computing angle towards clicked target
-    val angle: Double = math.atan((bull.yTar-bull.yPos)/(bull.xTar-bull.xPos))
 
-    if(bull.health>0) {
+  //######## logic behind bullet movement
+  def moveBull(bull: thing): Unit = {
+    //computing angle towards clicked target
+    val angle: Double = math.atan((bull.yTar - bull.yPos) / (bull.xTar - bull.xPos))
+
+    if (bull.health > 0) {
       //if angle was behind the tank
       if ((bull.xTar - bull.wild) < 0) {
         //angle = angle * -1
@@ -353,15 +439,15 @@ class Game {
     }
     bull.health -= 1
     //stop bullet if it reaches destination
-    if((math.abs(bull.xPos-bull.xTar)<playerSpeed)& math.abs(bull.yPos-bull.yTar)<playerSpeed) bull.health=0
+    if ((math.abs(bull.xPos - bull.xTar) < playerSpeed) & math.abs(bull.yPos - bull.yTar) < playerSpeed) bull.health = 0
 
-   // println("Bullet ("+bull.toString+"): "++bull.xPos.toString+","+bull.yPos.toString)
+    // println("Bullet ("+bull.toString+"): "++bull.xPos.toString+","+bull.yPos.toString)
   }
 
   //####### logic behind bullet collisions
-  def bullCollision(bull: thing):Unit ={
+  def bullCollision(bull: thing): Unit = {
     //check for barrier collisions
-    if(bull.health>0) {
+    if (bull.health > 0) {
       for (barrier <- allBarriers) {
         val width: Double = barrier.xTar / 2
         val height: Double = barrier.yTar / 2
@@ -390,28 +476,28 @@ class Game {
     }
   }
 
-  def deathCheck(): Unit ={
-    for(bull<-allBull){
-      if (bull.health<=0){
-        bull.deathAnimator +=1
-        if (bull.deathAnimator>=120)allBull-=bull
+  def deathCheck(): Unit = {
+    for (bull <- allBull) {
+      if (bull.health <= 0) {
+        bull.deathAnimator += 1
+        if (bull.deathAnimator >= 120) allBull -= bull
       }
     }
-    for(tank<-allTanks){
-      if (tank.health<=0){
-        tank.deathAnimator +=1
-        if (tank.deathAnimator>=120)allTanks-=tank
+    for (tank <- allTanks) {
+      if (tank.health <= 0) {
+        tank.deathAnimator += 1
+        if (tank.deathAnimator >= 120) allTanks -= tank
       }
     }
-    for(bar<-allBarriers){
-      if (bar.health<=0){
-        bar.deathAnimator +=1
-        if (bar.deathAnimator>=120)allBarriers-=bar
+    for (bar <- allBarriers) {
+      if (bar.health <= 0) {
+        bar.deathAnimator += 1
+        if (bar.deathAnimator >= 120) allBarriers -= bar
       }
     }
   }
 
-  def update(): Unit= {
+  def update(): Unit = {
     for (bull <- allBull) {
       deathCheck()
       bullCollision(bull)
@@ -419,5 +505,5 @@ class Game {
     }
     Files.write(Paths.get(JSONfile), toJSON().getBytes())
   }
-
 }
+

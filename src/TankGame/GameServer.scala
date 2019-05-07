@@ -2,6 +2,7 @@ package TankGame
 
 import java.io.FileNotFoundException
 
+import TankGame.Level
 import akka.actor.Actor
 import akka.io.Tcp
 import java.net.InetSocketAddress
@@ -36,15 +37,17 @@ class GameServer extends Actor {
 
   override def receive: Receive = {
     case b: Bound => println("Listening on port: " + b.localAddress.getPort)
+
     case c: Connected =>
       println("Client Connected: " + c.remoteAddress)
       this.clients = this.clients + sender()
       sender() ! Register(self)
+
     case PeerClosed =>
       println("Client Disconnected: " + sender())
       this.clients = this.clients - sender()
-    case r: Received =>
 
+    case r: Received =>
       buffer= r.data.utf8String
       val parsed: JsValue = Json.parse(buffer)
       val action:String = (parsed \ "action").as[String]
