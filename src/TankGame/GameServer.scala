@@ -2,7 +2,6 @@ package TankGame
 
 import java.io.FileNotFoundException
 
-import TankGame.Level
 import akka.actor.Actor
 import akka.io.Tcp
 import java.net.InetSocketAddress
