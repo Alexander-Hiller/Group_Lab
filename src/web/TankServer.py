@@ -64,36 +64,36 @@ def disconnect():
     send_to_scala(message)
     allUsers.remove(request.sid)
 
-
-@socket_server.on('keyStates')
-def key_state(jsonKeyStates):
-    key_states = json.loads(jsonKeyStates)
-    x = 0.0
-    if key_states["a"] and not key_states["d"]:
-        x = -1.0
-    elif not key_states["a"] and key_states["d"]:
-        x = 1.0
-    y = 0.0
-    if key_states["w"] and not key_states["s"]:
-        y = -1.0
-    elif not key_states["w"] and key_states["s"]:
-        y = 1.0
-    message = {"username": request.sid, "action": "move", "x": x, "y": y}
-    send_to_scala(message)
-
-
 @socket_server.on('test')
 def test():
     print(request.sid + " initiated test")
     message = {"username": request.sid, "action": "test"}
     send_to_scala(message)
 
-
 @socket_server.on('update')
 def update(json):
     message = {"JSONdata": json, "action": "update"}
     send_to_scala(message)
 
+@socket_server.on('move')
+def move(name, xPos, yPos):
+    message = {"name": name, "action": "move", "xPos": xPos, "yPos": yPos}
+    send_to_scala(message)
+
+@socket_server.on('rot')
+def rot(name, rot):
+    message = {"name": name, "action": "rot", "rot": rot}
+    send_to_scala(message)
+
+@socket_server.on('bull')
+def bull(xPos,yPos,xTar,yTar,name,bullNum):
+    message = {"name": name, "action": "bull", "xTar": xTar,"yTar":yTar,"bullNum":bullNum,"xPos": xPos,"yPos":yPos}
+    send_to_scala(message)
+
+@socket_server.on('newTank')
+def bull(xPos,yPos,name):
+    message = {"name": name, "action": "newTank", "xPos": xPos,"yPos":yPos}
+    send_to_scala(message)
 
 @app.route('/')
 def index():
