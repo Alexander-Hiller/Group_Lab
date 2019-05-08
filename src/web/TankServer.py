@@ -106,4 +106,4 @@ def static_files(filename):
 
 
 print("Listening on port 60000")
-socket_server.run(app, port=62000)
+socket_server.run(app, port=60000)
