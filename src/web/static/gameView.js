@@ -1,7 +1,7 @@
 var socket = io.connect({transports: ['websocket']});
 socket.on('gameState', parseGameState);
 
-const tileSize = 30;
+const tileSize = 20;
 
 var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
@@ -17,14 +17,24 @@ function parseGameState(event) {
         placeWall(wall['x'], wall['y'], 'grey');
     }
 
-    for (let player of gameState['tanks']) {
-        placeTank(player['xPos'], player['yPos'], 'green');
+    for (let tank of gameState['tanks']) {
+        placeTank(tank['xPos'], tank['yPos'], 'green');
     }
 
     for (let projectile of gameState['projectiles']) {
         placeBullet(projectile['xPos'], projectile['yPos'], 'red', 1.0);
     }
 
+}
+
+function cleanInt(input) {
+    const value = Math.round(input);
+    const asString = value.toString(16);
+    return value > 15 ? asString : "0" + asString;
+}
+
+function rgb(r, g, b) {
+    return "#" + cleanInt(r) + cleanInt(g) + cleanInt(b);
 }
 
 

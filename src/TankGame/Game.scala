@@ -220,7 +220,7 @@ class Game {
       "bars" -> bars,
       "bulls" -> bulls,
       "gridSize" -> Json.toJson(Map("x" -> 20, "y" -> 20)),
-      "walls" -> Json.toJson(this.wallLocations.map({ w => Json.toJson(Map("x" -> w.x, "y" -> w.y)) }))
+//      "walls" -> Json.toJson(this.wallLocations.map({ w => Json.toJson(Map("x" -> w.x, "y" -> w.y)) }))
     )
 
     Json.stringify(Json.toJson(thingMap))
