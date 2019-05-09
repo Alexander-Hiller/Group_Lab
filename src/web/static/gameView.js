@@ -1,102 +1,41 @@
 var socket = io.connect({transports: ['websocket']});
 socket.on('gameState', parseGameState);
 
-const tileSize = 20;
-
 var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
 context.globalCompositeOperation = 'source-over';
 
+
 function parseGameState(event) {
-    // console.log(event);
-    const gameState = JSON.parse(event);
 
-    drawGameBoard(gameState["gridSize"]);
+    var gameState = JSON.parse(event);
 
-    for (let wall of gameState['walls']) {
-        placeWall(wall['x'], wall['y'], 'grey');
+    //resets gameboard
+    drawGameBoard();
+
+    //redraws the tanks in new positions
+    for (var tankMap in gameState['tanks']) {
+        for (var key in tankMap) {
+            placeTank(tankMap[key]['xPos'], tankMap[key]['yPos'], '#ffff00', 20);
+        }
     }
-
-    for (let tank of gameState['tanks']) {
-        placeTank(tank['xPos'], tank['yPos'], 'green');
-    }
-
-    for (let projectile of gameState['projectiles']) {
-        placeBullet(projectile['xPos'], projectile['yPos'], 'red', 1.0);
-    }
-
-}
-
-function cleanInt(input) {
-    const value = Math.round(input);
-    const asString = value.toString(16);
-    return value > 15 ? asString : "0" + asString;
-}
-
-function rgb(r, g, b) {
-    return "#" + cleanInt(r) + cleanInt(g) + cleanInt(b);
 }
 
 
-function drawGameBoard(gridSize) {
-
-    const gridWidth = gridSize['x'];
-    const gridHeight = gridSize['y'];
-
-    context.clearRect(0, 0, gridWidth * tileSize, gridHeight * tileSize);
-
-    canvas.setAttribute("width", gridWidth * tileSize);
-    canvas.setAttribute("height", gridHeight * tileSize);
-
-    context.strokeStyle = '#bbbbbb';
-    for (let j = 0; j <= gridWidth; j++) {
-        context.beginPath();
-        context.moveTo(j * tileSize, 0);
-        context.lineTo(j * tileSize, gridHeight * tileSize);
-        context.stroke();
+function drawGameBoard() {
+    context.clearRect(0, 0, 600, 600);
+    if (canvas.getContext) {
+        context.strokeRect(0, 0, 600, 600);
     }
-    for (let k = 0; k <= gridHeight; k++) {
-        context.beginPath();
-        context.moveTo(0, k * tileSize);
-        context.lineTo(gridWidth * tileSize, k * tileSize);
-        context.stroke();
-    }
-
 }
 
 
-function placeWall(x, y, color) {
-    context.fillStyle = color;
-    context.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-    context.strokeStyle = 'black';
-    context.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
-}
-
-
-function placeBullet(x, y, color, size) {
+function placeTank(x, y, color, size) {
     context.fillStyle = color;
     context.beginPath();
-    context.arc(x * tileSize,
-        y * tileSize,
-        size / 10.0 * tileSize,
-        0,
-        2 * Math.PI);
+    context.arc(x, y, size, 0, 2 * Math.PI);
     context.fill();
-    context.strokeStyle = 'black';
+    context.strokeStyle = '#760672';
     context.stroke();
 }
 
-function xComp(degrees){
-    return Math.cos(Math.PI*degrees/180.0)
-}
-
-function yComp(degrees){
-    return Math.sin(Math.PI*degrees/180.0)
-}
-
-function placeTank(x, y, color) {
-    context.fillStyle = color;
-    context.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-    context.strokeStyle = 'black';
-    context.strokeRect(x * tileSize, y * tileSize, tileSize, tileSize);
-}

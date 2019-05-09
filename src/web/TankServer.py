@@ -95,6 +95,22 @@ def bull(xPos,yPos,name):
     message = {"name": name, "action": "newTank", "xPos": xPos,"yPos":yPos}
     send_to_scala(message)
 
+@socket_server.on('keyStates')
+def key_state(jsonKeyStates):
+    key_states = json.loads(jsonKeyStates)
+    x = 0.0
+    if key_states["a"] and not key_states["d"]:
+        x = -1.0
+    elif not key_states["a"] and key_states["d"]:
+        x = 1.0
+    y = 0.0
+    if key_states["w"] and not key_states["s"]:
+        y = -1.0
+    elif not key_states["w"] and key_states["s"]:
+        y = 1.0
+    message = {"username": request.sid, "action": "move", "xPos": x, "yPos": y}
+    send_to_scala(message)
+
 @app.route('/')
 def index():
     return send_from_directory('static', 'index.html')
@@ -104,6 +120,6 @@ def index():
 def static_files(filename):
     return send_from_directory('static', filename)
 
-
+'#ffff00'
 print("Listening on port 60000")
 socket_server.run(app, port=60000)
